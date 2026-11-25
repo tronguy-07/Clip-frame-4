@@ -1,0 +1,2824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ClipFrame Studio — iPad 9:16 Local Vertical Clip Studio</title>
+    <!-- Tailwind CSS for responsive touch-friendly iPad studio layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter font for crisp social-reel typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tesseract.js for 100% local offline screenshot OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        /* Touch-friendly iPad styling and custom range sliders */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            background-color: #0b0c0e;
+            color: #f3f4f6;
+            overscroll-behavior: none;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 6px;
+            border-radius: 999px;
+            background: #272a30;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #3b82f6;
+            margin-top: -8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s ease;
+        }
+        input[type="range"]:active::-webkit-slider-thumb {
+            transform: scale(1.15);
+            background: #3b82f6;
+            border-color: #ffffff;
+        }
+        .timeline-slider {
+            position: absolute;
+            width: 100%;
+            pointer-events: none;
+            background: none !important;
+            margin: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .timeline-slider::-webkit-slider-runnable-track {
+            background: transparent !important;
+            height: 0;
+        }
+        .timeline-slider::-webkit-slider-thumb {
+            pointer-events: auto;
+            width: 24px;
+            height: 32px;
+            border-radius: 6px;
+            margin-top: -16px;
+            cursor: ew-resize;
+        }
+        #startRange::-webkit-slider-thumb {
+            background: #10b981;
+            border: 2px solid #ffffff;
+        }
+        #endRange::-webkit-slider-thumb {
+            background: #f43f5e;
+            border: 2px solid #ffffff;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-[#0b0c0e] text-[#f3f4f6] select-none">
+
+    <!-- Toast Notification Banner (never uses alert/confirm) -->
+    <div id="toastBanner" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-200 transform -translate-y-2">
+        <div id="toastContent" class="bg-zinc-900/95 backdrop-blur-md text-white text-xs sm:text-sm font-medium px-4 py-2.5 rounded-full border border-zinc-700 shadow-2xl flex items-center gap-2">
+            <span id="toastDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span id="toastText">Ready</span>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 1. STARTING SCREEN: DEVELOPER & EDITOR AUTHENTICATION GATEWAY               -->
+    <!-- ========================================================================= -->
+    <section id="startScreen" class="min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-8 bg-[radial-gradient(ellipse_at_top,_#172033_0%,_#0b0c0e_65%)]">
+        <div class="w-full max-w-2xl bg-[#12151c]/95 backdrop-blur-xl border border-zinc-800/90 rounded-3xl p-6 sm:p-8 shadow-[0_25px_70px_rgba(0,0,0,0.85)] space-y-6">
+
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-5">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-white to-zinc-200 text-black flex items-center justify-center font-extrabold text-base shadow-lg">
+                        9:16
+                    </div>
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white">ClipFrame Studio</h1>
+                        <p class="text-xs sm:text-sm text-zinc-400">iPad Local 1080×1920 Reel Studio • Zero Uploads</p>
+                    </div>
+                </div>
+                <span class="self-start sm:self-center text-[11px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
+                    100% Local • Offline Ready
+                </span>
+            </div>
+
+            <!-- Two Main Role Tabs: Developer & Editor -->
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">Choose Role</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Developer Tab -->
+                    <button type="button" id="tabDeveloperBtn" class="text-left p-4 rounded-2xl border transition flex flex-col justify-between min-h-[104px] bg-zinc-900/80 border-zinc-800 hover:border-purple-500/50">
+                        <div class="flex items-center justify-between">
+                            <span class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center font-bold text-xs">DEV</span>
+                            <span class="text-[10px] font-mono uppercase text-purple-300 bg-purple-500/15 px-2 py-0.5 rounded">Gate + Admin</span>
+                        </div>
+                        <div class="mt-3">
+                            <p class="text-sm font-bold text-white">Developer</p>
+                            <p class="text-[11px] text-zinc-400 mt-0.5">Sign in to manage Editor accounts & dev pass</p>
+                        </div>
+                    </button>
+
+                    <!-- Editor Tab -->
+                    <button type="button" id="tabEditorBtn" class="text-left p-4 rounded-2xl border transition flex flex-col justify-between min-h-[104px] bg-blue-600/15 border-blue-500 ring-1 ring-blue-500/40">
+                        <div class="flex items-center justify-between">
+                            <span class="w-8 h-8 rounded-xl bg-blue-500/25 text-blue-300 flex items-center justify-center font-bold text-xs">EDT</span>
+                            <span class="text-[10px] font-mono uppercase text-blue-300 bg-blue-500/20 px-2 py-0.5 rounded">Studio Login</span>
+                        </div>
+                        <div class="mt-3">
+                            <p class="text-sm font-bold text-white">Editor</p>
+                            <p class="text-[11px] text-zinc-300 mt-0.5">Sign in with Editor credentials to edit reels</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- DEVELOPER GATE (Shown when Developer tab is clicked and not yet unlocked) -->
+            <div id="developerGatePanel" class="hidden bg-zinc-950/90 border border-purple-500/35 rounded-2xl p-5 space-y-4">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                        Developer Sign-In Gate
+                    </h2>
+                    <p class="text-xs text-zinc-400 mt-0.5">Enter Developer credentials to unlock Developer Mode and manage Editor accounts.</p>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label for="devGateUserInput" class="block text-xs font-semibold text-zinc-300 mb-1.5">Developer Username</label>
+                        <input type="text" id="devGateUserInput" autocomplete="off" autocapitalize="none" placeholder="Enter developer username" class="w-full bg-zinc-900 border border-zinc-700 focus:border-purple-400 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 outline-none select-text">
+                    </div>
+                    <div>
+                        <label for="devGatePassInput" class="block text-xs font-semibold text-zinc-300 mb-1.5">Developer Password</label>
+                        <div class="relative flex items-center">
+                            <input type="password" id="devGatePassInput" autocomplete="off" autocapitalize="none" placeholder="Enter developer password" class="w-full bg-zinc-900 border border-zinc-700 focus:border-purple-400 rounded-xl px-4 py-3 pr-16 text-sm text-white placeholder-zinc-500 outline-none select-text">
+                            <button type="button" id="toggleDevGatePassBtn" class="absolute right-3 text-xs font-semibold text-zinc-400 hover:text-white px-2 py-1">Show</button>
+                        </div>
+                    </div>
+                </div>
+
+                <p id="devGateErrorMsg" class="hidden text-xs font-semibold text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-xl px-3.5 py-2.5"></p>
+
+                <button type="button" id="devGateSubmitBtn" class="w-full bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-extrabold text-sm py-3.5 px-5 rounded-xl shadow-lg shadow-purple-600/25 min-h-[50px] transition">
+                    Unlock Developer Mode
+                </button>
+            </div>
+
+            <!-- EDITOR SIGN-IN FORM (Shown when Editor tab is active) -->
+            <div id="editorLoginPanel" class="bg-zinc-950/90 border border-blue-500/35 rounded-2xl p-5 space-y-4">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        Editor Sign In
+                    </h2>
+                    <p class="text-xs text-zinc-400 mt-0.5">Sign in using an Editor account configured in Developer Mode.</p>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label for="editorUserInput" class="block text-xs font-semibold text-zinc-300 mb-1.5">Editor Username</label>
+                        <input type="text" id="editorUserInput" autocomplete="off" autocapitalize="none" placeholder="Enter editor username" class="w-full bg-zinc-900 border border-zinc-700 focus:border-blue-500 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 outline-none select-text">
+                    </div>
+                    <div>
+                        <label for="editorPassInput" class="block text-xs font-semibold text-zinc-300 mb-1.5">Editor Password</label>
+                        <div class="relative flex items-center">
+                            <input type="password" id="editorPassInput" autocomplete="off" autocapitalize="none" placeholder="Enter editor password" class="w-full bg-zinc-900 border border-zinc-700 focus:border-blue-500 rounded-xl px-4 py-3 pr-16 text-sm text-white placeholder-zinc-500 outline-none select-text">
+                            <button type="button" id="toggleEditorPassBtn" class="absolute right-3 text-xs font-semibold text-zinc-400 hover:text-white px-2 py-1">Show</button>
+                        </div>
+                    </div>
+                </div>
+
+                <p id="editorLoginErrorMsg" class="hidden text-xs font-semibold text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-xl px-3.5 py-2.5"></p>
+
+                <button type="button" id="editorLoginSubmitBtn" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-extrabold text-sm py-3.5 px-5 rounded-xl shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 min-h-[50px] transition">
+                    <span>Enter ClipFrame Studio</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 2. DEVELOPER MODE WORKSPACE (Unlocked Only After Developer Sign-In)      -->
+    <!-- ========================================================================= -->
+    <section id="developerModeScreen" class="hidden min-h-screen w-full bg-[#0b0c0e] p-4 sm:p-8">
+        <div class="max-w-3xl mx-auto bg-[#12151c] border border-purple-500/35 rounded-3xl p-5 sm:p-8 shadow-2xl space-y-6">
+
+            <!-- Developer Header -->
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-4">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 px-2.5 py-0.5 rounded-full">DEVELOPER MODE</span>
+                        <span id="devSessionUserBadge" class="text-xs text-zinc-400 font-mono">Signed in: tronguy</span>
+                    </div>
+                    <h2 class="text-xl font-extrabold text-white mt-1.5">Account & Access Manager</h2>
+                    <p class="text-xs text-zinc-400">Add, edit, or remove Editor logins and update Developer credentials.</p>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" id="devGoToEditorTabBtn" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl min-h-[42px] transition">
+                        Switch to Editor Login
+                    </button>
+                    <button type="button" id="devLockToStartBtn" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-xs font-bold px-3.5 py-2.5 rounded-xl min-h-[42px] transition">
+                        Lock / Start Screen
+                    </button>
+                </div>
+            </div>
+
+            <!-- Editor Accounts CRUD Section -->
+            <div class="bg-zinc-950/90 border border-zinc-800 rounded-2xl p-4 sm:p-5 space-y-4">
+                <div class="flex items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-purple-300">Editor Accounts</h3>
+                        <p class="text-xs text-zinc-400 mt-0.5">Editors must use one of these saved accounts to enter ClipFrame Studio.</p>
+                    </div>
+                    <span id="editorAccountsCountBadge" class="text-xs font-mono bg-zinc-900 border border-zinc-700 text-zinc-300 px-2.5 py-1 rounded-lg">0 editors</span>
+                </div>
+
+                <!-- Add / Update Editor Form -->
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                    <input type="text" id="newEditorUserInput" autocomplete="off" autocapitalize="none" placeholder="Editor username" class="sm:col-span-5 bg-zinc-900 border border-zinc-700 focus:border-purple-400 rounded-xl px-3.5 py-3 text-sm text-white placeholder-zinc-500 outline-none select-text">
+                    <input type="text" id="newEditorPassInput" autocomplete="off" autocapitalize="none" placeholder="Editor password" class="sm:col-span-4 bg-zinc-900 border border-zinc-700 focus:border-purple-400 rounded-xl px-3.5 py-3 text-sm text-white placeholder-zinc-500 outline-none select-text">
+                    <button type="button" id="addEditorAccountBtn" class="sm:col-span-3 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-bold text-sm py-3 px-4 rounded-xl min-h-[46px] transition">
+                        + Save Editor
+                    </button>
+                </div>
+
+                <!-- List of Configured Editors -->
+                <div id="editorAccountsList" class="space-y-2.5 max-h-[280px] overflow-y-auto pr-1"></div>
+            </div>
+
+            <!-- Developer Credentials Settings Section -->
+            <div class="bg-zinc-950/90 border border-zinc-800 rounded-2xl p-4 sm:p-5 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-amber-300">Developer Credentials</h3>
+                        <p class="text-xs text-zinc-400 mt-0.5">Default is <span class="font-mono text-zinc-200">tronguy</span> / <span class="font-mono text-zinc-200">pqowieuryt</span>. Update below if desired.</p>
+                    </div>
+                    <button type="button" id="resetDefaultDevCredsBtn" class="text-xs font-semibold text-amber-300 hover:text-amber-200 underline">
+                        Reset Default (tronguy)
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                    <input type="text" id="updateDevUserInput" autocomplete="off" autocapitalize="none" placeholder="Developer username" class="sm:col-span-5 bg-zinc-900 border border-zinc-700 focus:border-amber-400 rounded-xl px-3.5 py-3 text-sm text-white placeholder-zinc-500 outline-none select-text">
+                    <input type="text" id="updateDevPassInput" autocomplete="off" autocapitalize="none" placeholder="Developer password" class="sm:col-span-4 bg-zinc-900 border border-zinc-700 focus:border-amber-400 rounded-xl px-3.5 py-3 text-sm text-white placeholder-zinc-500 outline-none select-text">
+                    <button type="button" id="saveDevCredsBtn" class="sm:col-span-3 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-black font-bold text-sm py-3 px-4 rounded-xl min-h-[46px] transition">
+                        Update Dev
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 3. EDITOR STUDIO WORKSPACE (Unlocked Only After Valid Editor Sign-In)     -->
+    <!-- ========================================================================= -->
+    <div id="studioApp" class="hidden min-h-screen flex-col lg:h-screen lg:overflow-hidden">
+
+        <!-- Top Studio Navigation Bar -->
+        <header class="bg-[#121418] border-b border-zinc-800/90 px-4 py-3 flex items-center justify-between gap-2 shrink-0 z-20">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-white text-black flex items-center justify-center font-extrabold text-sm shadow-sm">
+                    9:16
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-sm sm:text-base font-bold tracking-tight text-white leading-tight">ClipFrame Studio</h1>
+                        <span id="activeEditorBadge" class="text-[10px] sm:text-[11px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/35 px-2.5 py-0.5 rounded-full">
+                            Editor
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-zinc-400 hidden sm:block">1080×1920 Local Vertical Clip Maker</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <label for="videoFileInput" class="cursor-pointer bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl flex items-center gap-2 transition shadow-sm min-h-[42px]">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                    </svg>
+                    <span>Load Video</span>
+                </label>
+                <input type="file" id="videoFileInput" accept="video/*" class="hidden">
+
+                <button id="downloadHtmlBtn" title="Save standalone HTML file to iPad Files" class="bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-zinc-200 text-xs sm:text-sm font-medium px-3 py-2.5 rounded-xl flex items-center gap-1.5 border border-zinc-700/80 transition min-h-[42px]">
+                    <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    <span class="hidden xl:inline">Save App (.html)</span>
+                </button>
+
+                <button id="helpModalBtn" class="bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-zinc-200 text-xs sm:text-sm font-medium px-3 py-2.5 rounded-xl flex items-center gap-1.5 border border-zinc-700/80 transition min-h-[42px]">
+                    <svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="hidden md:inline">Guide</span>
+                </button>
+
+                <button id="lockToStartScreenBtn" class="bg-rose-500/15 hover:bg-rose-500/25 active:bg-rose-500/35 text-rose-300 border border-rose-500/35 text-xs sm:text-sm font-bold px-3 py-2.5 rounded-xl flex items-center gap-1.5 transition min-h-[42px]">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+                    </svg>
+                    <span>Start Screen</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace: Left Live 9:16 Canvas + Right Controls -->
+        <main class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+
+            <!-- LEFT STAGE: Live 1080x1920 9:16 Vertical Preview Canvas -->
+            <section id="dropZone" class="w-full lg:w-[46%] xl:w-[44%] bg-[#07080a] border-b lg:border-b-0 lg:border-r border-zinc-800/80 flex flex-col items-center justify-center p-4 sm:p-6 relative shrink-0 lg:shrink">
+                <div class="w-full max-w-[360px] flex items-center justify-between mb-3 text-[11px] font-medium text-zinc-400">
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        LIVE 9:16 CANVAS
+                    </span>
+                    <span id="resolutionBadge" class="bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded-md text-zinc-300">1080 × 1920 px</span>
+                </div>
+
+                <div id="previewStageContainer" class="relative w-full max-w-[310px] sm:max-w-[340px] lg:max-w-[330px] xl:max-w-[360px] aspect-[9/16] rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.85)] ring-1 ring-zinc-700/70 bg-white transition-colors duration-200 flex items-center justify-center">
+                    <canvas id="previewCanvas" class="w-full h-full block object-contain"></canvas>
+
+                    <div id="noVideoHint" class="absolute bottom-4 inset-x-4 bg-black/80 backdrop-blur-md text-white p-3 rounded-xl border border-white/15 flex items-center justify-between gap-3 shadow-lg">
+                        <div class="text-xs leading-snug">
+                            <p class="font-semibold text-white">Sample Preview Active</p>
+                            <p class="text-zinc-300 text-[11px]">Tap <span class="text-blue-400 font-semibold">Load Video</span> or drop a file here</p>
+                        </div>
+                        <button type="button" onclick="document.getElementById('videoFileInput').click()" class="bg-white text-black text-xs font-bold px-3 py-2 rounded-lg shrink-0 active:scale-95 transition">
+                            Browse
+                        </button>
+                    </div>
+                </div>
+
+                <div class="w-full max-w-[360px] mt-3.5 flex items-center justify-between gap-2 bg-zinc-900/90 border border-zinc-800 p-2 rounded-2xl">
+                    <button type="button" id="seekBack5Btn" class="px-2.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-xs font-semibold text-zinc-200 min-h-[40px] min-w-[44px] transition">-5s</button>
+                    <button type="button" id="seekBack1Btn" class="px-2.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-xs font-semibold text-zinc-200 min-h-[40px] min-w-[44px] transition">-1s</button>
+
+                    <button type="button" id="playPauseBtn" class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-zinc-100 active:bg-zinc-200 text-black font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 min-h-[40px] shadow transition">
+                        <svg id="playIcon" class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        <svg id="pauseIcon" class="w-4 h-4 fill-current hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        <span id="playPauseLabel">Play Loop</span>
+                    </button>
+
+                    <button type="button" id="seekFwd1Btn" class="px-2.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-xs font-semibold text-zinc-200 min-h-[40px] min-w-[44px] transition">+1s</button>
+                    <button type="button" id="seekFwd5Btn" class="px-2.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-xs font-semibold text-zinc-200 min-h-[40px] min-w-[44px] transition">+5s</button>
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL: Campaign Analyzer, Caption Style, Auto-Split, Bulk Captions, Trimmer, Queue & Export -->
+            <section class="flex-1 bg-[#101216] lg:overflow-y-auto p-4 sm:p-6 space-y-5 pb-24 lg:pb-8">
+
+                <!-- CARD 0: Campaign Rules Screenshot & Brief Analyzer -->
+                <div class="bg-gradient-to-br from-[#171d29] via-[#161a23] to-[#131720] border border-cyan-500/35 rounded-2xl p-4 sm:p-5 space-y-4 shadow-md">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                            0. Campaign Rules Screenshot & Brief Analyzer
+                        </h2>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" id="loadSampleBriefBtn" class="text-[11px] font-semibold bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 px-2.5 py-1 rounded-lg transition">
+                                Test Sample Brief
+                            </button>
+                            <button type="button" id="toggleGeminiKeyBtn" class="text-[11px] font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 px-2.5 py-1 rounded-lg transition">
+                                AI Vision Key
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="geminiKeyDrawer" class="hidden bg-zinc-950/90 border border-zinc-800 rounded-xl p-3 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-bold text-cyan-300">Optional: Gemini Vision AI Key</span>
+                            <span id="geminiKeyStatusBadge" class="text-[10px] font-mono text-zinc-400">Offline OCR Mode</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="password" id="geminiApiKeyInput" placeholder="Paste Gemini API Key (AIza...) — stored locally" class="flex-1 bg-zinc-900 border border-zinc-700 focus:border-cyan-400 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 outline-none select-text">
+                            <button type="button" id="saveGeminiKeyBtn" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs px-3.5 py-2 rounded-lg shrink-0 transition">
+                                Save
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-zinc-400">Leave blank to use 100% offline Tesseract OCR & rule parsing locally on your iPad.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 xl:grid-cols-12 gap-3.5 items-stretch">
+                        <div class="xl:col-span-5 flex flex-col justify-between bg-zinc-900/80 border border-dashed border-cyan-500/40 rounded-xl p-3.5 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-zinc-200">1. Upload Rules Screenshot</span>
+                                <label for="briefScreenshotInput" class="cursor-pointer bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 text-black font-bold text-xs px-3 py-1.5 rounded-lg transition shadow-sm">
+                                    Pick Image
+                                </label>
+                                <input type="file" id="briefScreenshotInput" accept="image/*" class="hidden">
+                            </div>
+
+                            <div id="briefPreviewBox" onclick="document.getElementById('briefScreenshotInput').click()" class="cursor-pointer relative min-h-[130px] max-h-[210px] rounded-lg bg-zinc-950/90 border border-zinc-800 flex flex-col items-center justify-center overflow-hidden p-2 text-center hover:border-cyan-500/50 transition">
+                                <img id="briefScreenshotPreviewImg" alt="Campaign Brief Screenshot" class="hidden max-h-[195px] w-auto object-contain rounded">
+                                <div id="briefUploadPlaceholder" class="space-y-1.5 p-2">
+                                    <svg class="w-7 h-7 text-cyan-400 mx-auto" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                                    </svg>
+                                    <p class="text-xs font-semibold text-zinc-300">Tap to add Campaign Rules Screenshot</p>
+                                    <p class="text-[11px] text-zinc-500">Extracts target scenes, editing rules, CTA & hashtags</p>
+                                </div>
+                            </div>
+
+                            <div id="ocrProgressBox" class="hidden space-y-1.5">
+                                <div class="flex justify-between text-[11px] font-semibold text-cyan-300">
+                                    <span id="ocrStatusLabel">Scanning screenshot text...</span>
+                                    <span id="ocrPercentLabel" class="font-mono">0%</span>
+                                </div>
+                                <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                                    <div id="ocrProgressBar" class="h-full bg-cyan-400 transition-all duration-150 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <button type="button" id="analyzeBriefBtn" class="w-full bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 disabled:opacity-50 text-black font-extrabold text-xs py-2.5 px-3 rounded-lg shadow flex items-center justify-center gap-1.5 min-h-[40px] transition">
+                                <span id="analyzeBriefBtnText">Scan & Parse Brief</span>
+                            </button>
+                        </div>
+
+                        <div class="xl:col-span-7 flex flex-col justify-between bg-zinc-900/80 border border-zinc-800 rounded-xl p-3.5 space-y-3">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-xs font-bold text-zinc-200">2. Extracted Rules & Target Moments</span>
+                                <div id="campaignMetaBadges" class="flex flex-wrap items-center gap-1 text-[10px] font-mono">
+                                    <span class="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded">No brief loaded</span>
+                                </div>
+                            </div>
+
+                            <textarea id="extractedBriefTextInput" rows="4" placeholder="Screenshot text appears here automatically—or paste campaign rules directly..." class="w-full bg-zinc-950/90 border border-zinc-700/80 focus:border-cyan-400 rounded-lg p-2.5 text-xs text-zinc-200 placeholder-zinc-500 outline-none resize-y leading-relaxed select-text"></textarea>
+
+                            <div id="parsedBriefSummaryBox" class="hidden bg-zinc-950/90 border border-cyan-500/25 rounded-lg p-2.5 space-y-2 text-xs">
+                                <div class="flex flex-wrap items-center justify-between gap-1">
+                                    <span class="font-bold text-cyan-300" id="parsedScenesCountLabel">0 Target Scenes Found</span>
+                                    <span class="text-[11px] text-emerald-300 font-medium" id="parsedEditingRuleLabel">Punchy 18s cuts + 106% reframe</span>
+                                </div>
+                                <div id="parsedScenesPills" class="flex flex-wrap gap-1.5 max-h-[76px] overflow-y-auto"></div>
+                                <div id="parsedCtaPreviewRow" class="hidden pt-1.5 border-t border-zinc-800/90 flex items-center justify-between gap-2">
+                                    <p class="text-[11px] text-amber-200 truncate"><strong class="text-amber-400">Required Post CTA:</strong> <span id="parsedCtaPreviewText"></span></p>
+                                    <button type="button" id="copyMandatoryCtaBtn" class="shrink-0 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-[10px] font-bold px-2 py-1 rounded transition">
+                                        Copy CTA
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button type="button" id="applyBriefToStudioBtn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 active:scale-[0.99] text-black font-extrabold text-xs sm:text-sm py-2.5 px-4 rounded-xl shadow flex items-center justify-center gap-2 min-h-[44px] transition">
+                                <span>Apply Campaign Rules & Generate Target Reels</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 1: Active Reel Caption & Framing Style -->
+                <div class="bg-[#171a21] border border-zinc-800/90 rounded-2xl p-4 sm:p-5 space-y-4 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            1. Active Reel Caption & Style
+                        </h2>
+                        <div class="flex items-center bg-zinc-900 p-1 rounded-xl border border-zinc-800">
+                            <button type="button" id="themeWhiteBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-black shadow-sm transition">
+                                Classic White
+                            </button>
+                            <button type="button" id="themeBlackBtn" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white transition">
+                                Cinema Black
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <textarea id="captionInput" rows="2" placeholder="Enter caption above video..." class="w-full bg-zinc-900/90 border border-zinc-700/90 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl p-3.5 text-base text-white placeholder-zinc-500 outline-none resize-none leading-snug select-text">Glen Powell as a country singer? Yeah, we're seated</textarea>
+                        <div class="flex flex-wrap items-center justify-between gap-2 mt-2">
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="fontWeightToggle" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-xs font-semibold text-zinc-200 min-h-[36px] transition">
+                                    Weight: <span id="fontWeightLabel" class="text-blue-400">Medium (500)</span>
+                                </button>
+                                <button type="button" id="textAlignToggle" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-xs font-semibold text-zinc-200 min-h-[36px] transition">
+                                    Align: <span id="textAlignLabel" class="text-blue-400">Center</span>
+                                </button>
+                            </div>
+                            <button type="button" id="clearCaptionBtn" class="text-xs text-zinc-400 hover:text-zinc-200 px-2 py-1">Clear</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                        <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
+                            <div class="flex justify-between text-xs font-medium mb-2">
+                                <span class="text-zinc-400">Caption Font Size</span>
+                                <span id="fontSizeVal" class="text-white font-semibold">44 px</span>
+                            </div>
+                            <input type="range" id="fontSizeSlider" min="28" max="72" value="44" class="w-full">
+                        </div>
+
+                        <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
+                            <div class="flex justify-between text-xs font-medium mb-2">
+                                <span class="text-zinc-400">Gap Above Video</span>
+                                <span id="gapVal" class="text-white font-semibold">42 px</span>
+                            </div>
+                            <input type="range" id="gapSlider" min="16" max="140" value="42" class="w-full">
+                        </div>
+
+                        <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
+                            <div class="flex justify-between text-xs font-medium mb-2">
+                                <span class="text-zinc-400">Line Spacing</span>
+                                <span id="lineHeightVal" class="text-white font-semibold">1.28×</span>
+                            </div>
+                            <input type="range" id="lineHeightSlider" min="1.05" max="1.65" step="0.05" value="1.28" class="w-full">
+                        </div>
+
+                        <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
+                            <div class="flex justify-between text-xs font-medium mb-2">
+                                <span class="text-zinc-400">Video Zoom / Fill</span>
+                                <span id="zoomVal" class="text-white font-semibold">100% (Fit)</span>
+                            </div>
+                            <input type="range" id="zoomSlider" min="100" max="175" step="1" value="100" class="w-full">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 2: Smart Auto-Split Engine -->
+                <div class="bg-gradient-to-br from-[#191d26] to-[#151820] border border-purple-500/30 rounded-2xl p-4 sm:p-5 space-y-4 shadow-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                            2. Smart Auto-Split Engine
+                        </h2>
+                        <span class="text-[11px] font-semibold bg-purple-500/15 text-purple-300 border border-purple-500/30 px-2.5 py-0.5 rounded-full">1 Video → Multiple Reels</span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-1.5 bg-zinc-950/90 p-1.5 rounded-xl border border-zinc-800">
+                        <button type="button" id="splitModeIntervalBtn" class="py-2 px-2 rounded-lg text-xs font-bold bg-purple-600 text-white shadow transition">
+                            Equal Intervals
+                        </button>
+                        <button type="button" id="splitModePeaksBtn" class="py-2 px-2 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white transition">
+                            Audio Peaks
+                        </button>
+                        <button type="button" id="splitModeScriptBtn" class="py-2 px-2 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white transition">
+                            Timestamps
+                        </button>
+                    </div>
+
+                    <div id="splitPanelInterval" class="space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-3">
+                                <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5">Reel Length</label>
+                                <select id="intervalDurationSelect" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2.5 py-2 text-xs font-bold text-white outline-none">
+                                    <option value="15">15 sec (Fast Hook)</option>
+                                    <option value="20">20 sec (Punchy)</option>
+                                    <option value="30" selected>30 sec (Sweet Spot)</option>
+                                    <option value="45">45 sec (Storytelling)</option>
+                                    <option value="60">60 sec (Full Reel)</option>
+                                    <option value="custom">Custom Seconds...</option>
+                                </select>
+                                <input type="number" id="customIntervalInput" min="3" max="180" value="25" placeholder="Sec" class="hidden mt-2 w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none">
+                            </div>
+
+                            <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-3">
+                                <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5">Hook Overlap</label>
+                                <select id="intervalOverlapSelect" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2.5 py-2 text-xs font-bold text-white outline-none">
+                                    <option value="0" selected>0s (Clean Cuts)</option>
+                                    <option value="1">1s Overlap</option>
+                                    <option value="2">2s Context Overlap</option>
+                                </select>
+                            </div>
+
+                            <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-3">
+                                <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5">Min Final Clip</label>
+                                <select id="minTailSelect" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2.5 py-2 text-xs font-bold text-white outline-none">
+                                    <option value="4">4s (Keep short tail)</option>
+                                    <option value="8" selected>8s (Merge if shorter)</option>
+                                    <option value="12">12s (Merge if shorter)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="button" id="runIntervalSplitBtn" class="w-full bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-bold text-xs sm:text-sm py-3 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 min-h-[46px] transition">
+                            <span>Auto-Split Video into Equal Reels</span>
+                        </button>
+                    </div>
+
+                    <div id="splitPanelPeaks" class="hidden space-y-3">
+                        <p class="text-xs text-zinc-400 leading-relaxed">
+                            Scans audio energy locally on your iPad to slice viral-length Reels around high-volume moments.
+                        </p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-3">
+                                <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5">Target Clip Count</label>
+                                <select id="peakCountSelect" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2.5 py-2 text-xs font-bold text-white outline-none">
+                                    <option value="3">Top 3 Viral Moments</option>
+                                    <option value="5" selected>Top 5 Viral Moments</option>
+                                    <option value="8">Top 8 Viral Moments</option>
+                                    <option value="12">Top 12 Viral Moments</option>
+                                </select>
+                            </div>
+                            <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-3">
+                                <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5">Clip Window</label>
+                                <select id="peakWindowSelect" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2.5 py-2 text-xs font-bold text-white outline-none">
+                                    <option value="15">15 sec clip</option>
+                                    <option value="25" selected>25 sec clip</option>
+                                    <option value="35">35 sec clip</option>
+                                    <option value="45">45 sec clip</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="button" id="runPeakSplitBtn" class="w-full bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-bold text-xs sm:text-sm py-3 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 min-h-[46px] transition">
+                            <span id="peakBtnLabel">Detect Audio Peaks & Create Reels</span>
+                        </button>
+                    </div>
+
+                    <div id="splitPanelScript" class="hidden space-y-3">
+                        <p class="text-xs text-zinc-400">
+                            Paste lines with timestamps & captions (e.g., <code class="text-purple-300">00:12 - 00:34 | Hook text</code> or <code class="text-purple-300">01:05 Hook text</code>).
+                        </p>
+                        <textarea id="timestampScriptInput" rows="4" placeholder="00:05 - 00:25 | Glen Powell as a country singer? Yeah, we're seated&#10;00:42 - 01:08 | When the beat drops in Nashville&#10;01:30 | Wait until the end for this crowd reaction" class="w-full bg-zinc-950 border border-zinc-700 focus:border-purple-500 rounded-xl p-3 text-xs text-white placeholder-zinc-500 outline-none resize-y select-text font-mono"></textarea>
+                        <button type="button" id="runScriptParseBtn" class="w-full bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-bold text-xs sm:text-sm py-3 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 min-h-[46px] transition">
+                            <span>Parse Timestamps & Generate Reels</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CARD 3: Bulk Captions Paster & Auto-Mapper -->
+                <div class="bg-[#171a21] border border-amber-500/30 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                            3. Bulk Captions Paster & Auto-Mapper
+                        </h2>
+                        <div class="flex items-center gap-1.5 text-[11px] font-mono">
+                            <span id="pastedCaptionCountBadge" class="bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md font-bold">0 captions</span>
+                            <span class="text-zinc-500">vs</span>
+                            <span id="queueMatchCountBadge" class="bg-zinc-800 text-zinc-300 border border-zinc-700 px-2 py-0.5 rounded-md font-bold">0 reels</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
+                            <button type="button" id="delimLineBtn" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500 text-black transition">
+                                1 Line = 1 Reel
+                            </button>
+                            <button type="button" id="delimBlankBtn" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-zinc-400 hover:text-white transition">
+                                Blank Line / ---
+                            </button>
+                        </div>
+                        <button type="button" id="pasteClipboardBulkBtn" class="text-xs font-semibold text-amber-300 hover:text-amber-200 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-lg transition">
+                            Paste from Clipboard
+                        </button>
+                    </div>
+
+                    <textarea id="bulkCaptionsInput" rows="5" placeholder="Paste all captions here at once...&#10;&#10;1. Glen Powell as a country singer? Yeah, we're seated&#10;2. Nobody expected this plot twist halfway through&#10;3. The crowd reaction at 0:45 gave me chills" class="w-full bg-zinc-900/95 border border-zinc-700/90 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl p-3.5 text-xs sm:text-sm text-white placeholder-zinc-500 outline-none resize-y leading-relaxed select-text"></textarea>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <button type="button" id="mapCaptionsToReelsBtn" class="bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-black font-bold text-xs sm:text-sm py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2 min-h-[46px] transition">
+                            <span>Map Captions to Reels (1-to-1)</span>
+                        </button>
+
+                        <button type="button" id="splitToMatchCaptionsBtn" class="bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-amber-300 border border-amber-500/30 font-bold text-xs sm:text-sm py-3 px-4 rounded-xl flex items-center justify-center gap-2 min-h-[46px] transition">
+                            <span>Auto-Split Video to Match Count</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CARD 4: Precision Clip Trimmer -->
+                <div class="bg-[#171a21] border border-zinc-800/90 rounded-2xl p-4 sm:p-5 space-y-4 shadow-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            4. Fine-Tune Selected Reel Trim
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <span id="currentTimeBadge" class="text-xs font-mono bg-zinc-900 border border-zinc-700 px-2.5 py-1 rounded-lg text-zinc-300">00:00.0</span>
+                            <span id="clipDurationBadge" class="text-xs font-mono font-bold bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 px-2.5 py-1 rounded-lg">Clip: 00:10.0s</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="relative h-12 bg-zinc-900 rounded-xl border border-zinc-800 px-3 flex items-center">
+                            <div class="relative w-full h-2.5 bg-zinc-800 rounded-full overflow-visible">
+                                <div id="selectedRangeBar" class="absolute h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full" style="left: 0%; width: 100%;"></div>
+                                <div id="playheadMarker" class="absolute top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-full shadow-[0_0_8px_#fff] pointer-events-none z-10" style="left: 0%;"></div>
+                            </div>
+                            <input type="range" id="startRange" min="0" max="100" step="0.05" value="0" class="timeline-slider inset-x-3 w-[calc(100%-24px)] z-20" aria-label="Clip Start Time">
+                            <input type="range" id="endRange" min="0" max="100" step="0.05" value="100" class="timeline-slider inset-x-3 w-[calc(100%-24px)] z-20" aria-label="Clip End Time">
+                        </div>
+
+                        <div class="flex items-center gap-3 px-1">
+                            <span class="text-[11px] font-medium text-zinc-400 shrink-0">Scrub</span>
+                            <input type="range" id="playheadScrubber" min="0" max="100" step="0.05" value="0" class="w-full">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-3 flex flex-col gap-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-semibold text-emerald-400">START (IN)</span>
+                                <span id="startTimeDisplay" class="text-xs font-mono font-bold text-white">00:00.0</span>
+                            </div>
+                            <button type="button" id="setStartNowBtn" class="w-full py-2.5 px-3 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 active:bg-emerald-600/40 border border-emerald-500/40 text-emerald-300 text-xs font-bold min-h-[42px] transition">
+                                Set Start to Current
+                            </button>
+                        </div>
+
+                        <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-3 flex flex-col gap-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-semibold text-rose-400">END (OUT)</span>
+                                <span id="endTimeDisplay" class="text-xs font-mono font-bold text-white">00:10.0</span>
+                            </div>
+                            <button type="button" id="setEndNowBtn" class="w-full py-2.5 px-3 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 active:bg-rose-600/40 border border-rose-500/40 text-rose-300 text-xs font-bold min-h-[42px] transition">
+                                Set End to Current
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                        <label class="flex items-center gap-2.5 cursor-pointer bg-zinc-900 px-3.5 py-2.5 rounded-xl border border-zinc-800 min-h-[44px]">
+                            <input type="checkbox" id="loopClipCheckbox" checked class="w-4 h-4 accent-blue-500 rounded">
+                            <span class="text-xs font-semibold text-zinc-200">Auto-Loop Selected Clip</span>
+                        </label>
+
+                        <button type="button" id="saveToQueueBtn" class="flex-1 sm:flex-initial bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-white border border-zinc-600/80 font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 min-h-[44px] transition">
+                            <span>+ Add Current Cut as New Reel</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CARD 5: Storyboard Queue -->
+                <div class="bg-[#171a21] border border-zinc-800/90 rounded-2xl p-4 sm:p-5 space-y-3 shadow-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            5. Ready-to-Upload Reels (<span id="queueCount">0</span>)
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] text-zinc-400 hidden sm:inline">Tap card to preview • Edit inline</span>
+                            <button type="button" id="clearQueueBtn" class="text-[11px] font-semibold text-rose-400 hover:text-rose-300 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-lg transition">
+                                Clear All
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="socialPostBuilderBox" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-bold text-amber-300 uppercase tracking-wide">Social Post Caption (CTA & Hashtags)</span>
+                            <button type="button" id="copyActiveSocialPostBtn" class="bg-amber-500 hover:bg-amber-400 text-black font-bold text-[11px] px-2.5 py-1 rounded-lg transition">
+                                Copy Post Caption
+                            </button>
+                        </div>
+                        <textarea id="activeSocialPostTextarea" rows="2" class="w-full bg-zinc-950/90 border border-amber-500/30 rounded-lg p-2 text-xs text-amber-100 outline-none resize-y select-text"></textarea>
+                    </div>
+
+                    <div id="clipQueueList" class="space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
+                        <div class="text-xs text-zinc-500 bg-zinc-900/50 border border-dashed border-zinc-800 rounded-xl p-4 text-center">
+                            No Reels generated yet. Use <strong class="text-purple-300">Smart Auto-Split Engine</strong> above or tap <strong class="text-zinc-300">+ Add Current Cut as New Reel</strong>.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 6: 1080x1920 Single & Batch Export -->
+                <div class="bg-gradient-to-br from-[#191e29] to-[#14171f] border border-blue-500/30 rounded-2xl p-4 sm:p-5 space-y-4 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                                6. Export Ready-to-Upload Reels
+                            </h2>
+                            <p class="text-xs text-zinc-400 mt-0.5">Renders locally on your iPad at 1080×1920 with audio</p>
+                        </div>
+                        <span id="formatSupportBadge" class="text-[11px] font-mono bg-blue-500/15 text-blue-300 border border-blue-500/30 px-2.5 py-1 rounded-lg">MP4 / WebM</span>
+                    </div>
+
+                    <div id="exportProgressContainer" class="hidden space-y-2 bg-zinc-950/80 p-3.5 rounded-xl border border-zinc-800">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span id="exportStatusText" class="text-blue-400">Rendering 1080×1920 Reel...</span>
+                            <span id="exportPercentText" class="text-white font-mono">0%</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-zinc-800 rounded-full overflow-hidden">
+                            <div id="exportProgressBar" class="h-full bg-blue-500 transition-all duration-100 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" id="cancelExportBtn" class="text-xs text-rose-400 hover:text-rose-300 font-semibold px-2 py-1">Cancel Render</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <button type="button" id="batchExportAllBtn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed text-black font-extrabold text-sm py-3.5 px-5 rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 min-h-[52px] transition">
+                            <span id="batchExportBtnText">Batch Export All Reels (0)</span>
+                        </button>
+
+                        <div class="flex flex-col sm:flex-row gap-2.5">
+                            <button type="button" id="exportClipBtn" class="flex-1 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs sm:text-sm py-3 px-4 rounded-xl shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 min-h-[46px] transition">
+                                <span id="exportBtnText">Export Active Reel Only (.mp4)</span>
+                            </button>
+
+                            <button type="button" id="exportSnapshotBtn" class="bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-zinc-200 font-semibold text-xs sm:text-sm py-3 px-4 rounded-xl border border-zinc-700 flex items-center justify-center gap-2 min-h-[46px] transition">
+                                <span>PNG Frame</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="downloadReadyBox" class="hidden bg-emerald-500/15 border border-emerald-500/40 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                        <div class="text-xs">
+                            <p class="font-bold text-emerald-300">Export Complete!</p>
+                            <p id="downloadMetaText" class="text-emerald-200/80 mt-0.5">1080×1920 • Ready for iPad Files / Photos</p>
+                        </div>
+                        <a id="manualDownloadLink" href="#" download="vertical-clip.mp4" class="bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs px-4 py-2.5 rounded-lg shrink-0 shadow transition">
+                            Save File
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <video id="sourceVideo" playsinline webkit-playsinline preload="auto" class="hidden"></video>
+    <canvas id="exportCanvas" width="1080" height="1920" class="hidden"></canvas>
+
+    <!-- Localhost / iPad Guide Modal -->
+    <div id="helpModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-[#161920] border border-zinc-700 rounded-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+                <h3 class="text-base font-bold text-white">iPad Local Reel Studio Guide</h3>
+                <button type="button" id="closeHelpModalBtn" class="text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg bg-zinc-800 text-xs font-bold">Close</button>
+            </div>
+            <div class="space-y-3 text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                <p>All video decoding, OCR text extraction, caption mapping, and 1080×1920 rendering happen locally inside your browser on your iPad—no files are uploaded to any server.</p>
+                <p class="text-zinc-400 text-xs">Tip: Add your GitHub Pages URL to your iPad Home Screen via Chrome or Safari for quick full-screen launching.</p>
+            </div>
+            <div class="flex justify-end pt-1">
+                <button type="button" id="gotItBtn" class="bg-white text-black font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl active:scale-95 transition">
+                    Got It
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            // =========================================================================
+            // 1. AUTHENTICATION STATE: DEVELOPER GATE, DEVELOPER MODE & EDITOR LOGIN
+            // =========================================================================
+            const DEV_CREDS_KEY = 'clipframe_dev_credentials_v1';
+            const EDITOR_ACCOUNTS_KEY = 'clipframe_editor_accounts_v1';
+
+            const DEFAULT_DEV_CREDS = {
+                user: 'tronguy',
+                pass: 'pqowieuryt'
+            };
+
+            const startScreen = document.getElementById('startScreen');
+            const developerModeScreen = document.getElementById('developerModeScreen');
+            const studioApp = document.getElementById('studioApp');
+
+            const tabDeveloperBtn = document.getElementById('tabDeveloperBtn');
+            const tabEditorBtn = document.getElementById('tabEditorBtn');
+            const developerGatePanel = document.getElementById('developerGatePanel');
+            const editorLoginPanel = document.getElementById('editorLoginPanel');
+
+            const devGateUserInput = document.getElementById('devGateUserInput');
+            const devGatePassInput = document.getElementById('devGatePassInput');
+            const devGateErrorMsg = document.getElementById('devGateErrorMsg');
+            const devGateSubmitBtn = document.getElementById('devGateSubmitBtn');
+
+            const editorUserInput = document.getElementById('editorUserInput');
+            const editorPassInput = document.getElementById('editorPassInput');
+            const editorLoginErrorMsg = document.getElementById('editorLoginErrorMsg');
+            const editorLoginSubmitBtn = document.getElementById('editorLoginSubmitBtn');
+
+            const newEditorUserInput = document.getElementById('newEditorUserInput');
+            const newEditorPassInput = document.getElementById('newEditorPassInput');
+            const addEditorAccountBtn = document.getElementById('addEditorAccountBtn');
+            const editorAccountsList = document.getElementById('editorAccountsList');
+            const editorAccountsCountBadge = document.getElementById('editorAccountsCountBadge');
+
+            const updateDevUserInput = document.getElementById('updateDevUserInput');
+            const updateDevPassInput = document.getElementById('updateDevPassInput');
+            const saveDevCredsBtn = document.getElementById('saveDevCredsBtn');
+            const resetDefaultDevCredsBtn = document.getElementById('resetDefaultDevCredsBtn');
+            const devSessionUserBadge = document.getElementById('devSessionUserBadge');
+            const activeEditorBadge = document.getElementById('activeEditorBadge');
+
+            let isDeveloperAuthenticated = false;
+            let currentAuthenticatedDevUser = DEFAULT_DEV_CREDS.user;
+            let currentAuthenticatedEditorUser = null;
+
+            function getDevCredentials() {
+                try {
+                    const raw = localStorage.getItem(DEV_CREDS_KEY);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (parsed && typeof parsed.user === 'string' && typeof parsed.pass === 'string' && parsed.user.trim() && parsed.pass.trim()) {
+                            return { user: parsed.user.trim(), pass: parsed.pass };
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Failed to load developer credentials:', err);
+                }
+                localStorage.setItem(DEV_CREDS_KEY, JSON.stringify(DEFAULT_DEV_CREDS));
+                return { ...DEFAULT_DEV_CREDS };
+            }
+
+            function saveDevCredentials(creds) {
+                const clean = { user: creds.user.trim(), pass: creds.pass };
+                localStorage.setItem(DEV_CREDS_KEY, JSON.stringify(clean));
+                return clean;
+            }
+
+            function getEditorAccounts() {
+                try {
+                    const raw = localStorage.getItem(EDITOR_ACCOUNTS_KEY);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed)) {
+                            return parsed.filter((item) => item && typeof item.user === 'string' && typeof item.pass === 'string');
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Failed to load editor accounts:', err);
+                }
+                const initialList = [];
+                localStorage.setItem(EDITOR_ACCOUNTS_KEY, JSON.stringify(initialList));
+                return initialList;
+            }
+
+            function saveEditorAccounts(list) {
+                localStorage.setItem(EDITOR_ACCOUNTS_KEY, JSON.stringify(list));
+                renderEditorAccountsList();
+            }
+
+            function showStartScreen(preferredTab = 'editor') {
+                isDeveloperAuthenticated = false;
+                currentAuthenticatedEditorUser = null;
+                if (sourceVideo && !sourceVideo.paused) {
+                    sourceVideo.pause();
+                }
+
+                developerModeScreen.classList.add('hidden');
+                studioApp.classList.add('hidden');
+                studioApp.classList.remove('flex');
+                startScreen.classList.remove('hidden');
+
+                switchStartTab(preferredTab);
+            }
+
+            function switchStartTab(tab) {
+                const isDev = tab === 'dev';
+                const inactiveTabClass = 'text-left p-4 rounded-2xl border transition flex flex-col justify-between min-h-[104px] bg-zinc-900/80 border-zinc-800 hover:border-zinc-600';
+
+                tabDeveloperBtn.className = isDev
+                    ? 'text-left p-4 rounded-2xl border transition flex flex-col justify-between min-h-[104px] bg-purple-600/15 border-purple-500 ring-1 ring-purple-500/40'
+                    : inactiveTabClass;
+
+                tabEditorBtn.className = !isDev
+                    ? 'text-left p-4 rounded-2xl border transition flex flex-col justify-between min-h-[104px] bg-blue-600/15 border-blue-500 ring-1 ring-blue-500/40'
+                    : inactiveTabClass;
+
+                developerGatePanel.classList.toggle('hidden', !isDev);
+                editorLoginPanel.classList.toggle('hidden', isDev);
+
+                devGateErrorMsg.classList.add('hidden');
+                editorLoginErrorMsg.classList.add('hidden');
+            }
+
+            function openDeveloperMode(devUser) {
+                isDeveloperAuthenticated = true;
+                currentAuthenticatedDevUser = devUser;
+                const devCreds = getDevCredentials();
+
+                startScreen.classList.add('hidden');
+                studioApp.classList.add('hidden');
+                studioApp.classList.remove('flex');
+                developerModeScreen.classList.remove('hidden');
+
+                devSessionUserBadge.textContent = `Signed in: ${devCreds.user}`;
+                updateDevUserInput.value = devCreds.user;
+                updateDevPassInput.value = devCreds.pass;
+                renderEditorAccountsList();
+            }
+
+            function renderEditorAccountsList() {
+                const accounts = getEditorAccounts();
+                editorAccountsCountBadge.textContent = `${accounts.length} editor${accounts.length === 1 ? '' : 's'}`;
+
+                if (accounts.length === 0) {
+                    editorAccountsList.innerHTML = `
+                        <div class="text-xs text-zinc-400 bg-zinc-900/70 border border-dashed border-zinc-800 rounded-xl p-4 text-center">
+                            No Editor accounts created yet. Add an Editor username and password above so Editors can sign in.
+                        </div>`;
+                    return;
+                }
+
+                editorAccountsList.innerHTML = '';
+                accounts.forEach((acct, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-zinc-900/90 border border-zinc-800 rounded-xl p-3 space-y-2.5';
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-bold text-purple-300">Editor #${idx + 1}: ${escapeHtml(acct.user)}</span>
+                            <button type="button" data-delete-editor="${idx}" class="bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-bold px-3 py-1 rounded-lg transition">
+                                Remove
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <input type="text" data-edit-user="${idx}" value="${escapeHtml(acct.user)}" placeholder="Username" class="sm:col-span-5 bg-zinc-950 border border-zinc-700 focus:border-purple-400 rounded-lg px-3 py-2 text-xs text-white outline-none select-text">
+                            <input type="text" data-edit-pass="${idx}" value="${escapeHtml(acct.pass)}" placeholder="Password" class="sm:col-span-5 bg-zinc-950 border border-zinc-700 focus:border-purple-400 rounded-lg px-3 py-2 text-xs text-white outline-none select-text">
+                            <button type="button" data-save-editor="${idx}" class="sm:col-span-2 bg-zinc-800 hover:bg-zinc-700 text-emerald-300 border border-emerald-500/30 text-xs font-bold py-2 px-2.5 rounded-lg transition">
+                                Save
+                            </button>
+                        </div>
+                    `;
+
+                    card.querySelector(`[data-save-editor="${idx}"]`).addEventListener('click', () => {
+                        const nextUser = card.querySelector(`[data-edit-user="${idx}"]`).value.trim();
+                        const nextPass = card.querySelector(`[data-edit-pass="${idx}"]`).value.trim();
+                        if (!nextUser || !nextPass) {
+                            showToast('Editor username and password cannot be empty', 'error');
+                            return;
+                        }
+                        const currentList = getEditorAccounts();
+                        const duplicate = currentList.some((other, otherIdx) => otherIdx !== idx && other.user.toLowerCase() === nextUser.toLowerCase());
+                        if (duplicate) {
+                            showToast(`Editor username "${nextUser}" already exists`, 'error');
+                            return;
+                        }
+                        currentList[idx] = { user: nextUser, pass: nextPass };
+                        saveEditorAccounts(currentList);
+                        showToast(`Updated Editor "${nextUser}"`);
+                    });
+
+                    card.querySelector(`[data-delete-editor="${idx}"]`).addEventListener('click', () => {
+                        const currentList = getEditorAccounts().filter((_, i) => i !== idx);
+                        saveEditorAccounts(currentList);
+                        showToast(`Removed Editor "${acct.user}"`, 'info');
+                    });
+
+                    editorAccountsList.appendChild(card);
+                });
+            }
+
+            function handleDeveloperGateSignIn() {
+                const inputUser = devGateUserInput.value.trim();
+                const inputPass = devGatePassInput.value;
+                const devCreds = getDevCredentials();
+
+                if (!inputUser || !inputPass) {
+                    devGateErrorMsg.textContent = 'Enter both Developer username and password.';
+                    devGateErrorMsg.classList.remove('hidden');
+                    return;
+                }
+
+                if (inputUser === devCreds.user && inputPass === devCreds.pass) {
+                    devGateErrorMsg.classList.add('hidden');
+                    devGatePassInput.value = '';
+                    openDeveloperMode(devCreds.user);
+                    showToast(`Developer Mode unlocked (${devCreds.user})`);
+                } else {
+                    devGateErrorMsg.textContent = 'Invalid Developer username or password.';
+                    devGateErrorMsg.classList.remove('hidden');
+                }
+            }
+
+            function handleEditorSignIn() {
+                const inputUser = editorUserInput.value.trim();
+                const inputPass = editorPassInput.value;
+                const accounts = getEditorAccounts();
+
+                if (!inputUser || !inputPass) {
+                    editorLoginErrorMsg.textContent = 'Enter both Editor username and password.';
+                    editorLoginErrorMsg.classList.remove('hidden');
+                    return;
+                }
+
+                if (accounts.length === 0) {
+                    editorLoginErrorMsg.textContent = 'No Editor accounts configured yet. Sign in via Developer tab to add one.';
+                    editorLoginErrorMsg.classList.remove('hidden');
+                    return;
+                }
+
+                const matched = accounts.find((acct) => acct.user === inputUser && acct.pass === inputPass);
+                if (!matched) {
+                    editorLoginErrorMsg.textContent = 'Invalid Editor username or password.';
+                    editorLoginErrorMsg.classList.remove('hidden');
+                    return;
+                }
+
+                editorLoginErrorMsg.classList.add('hidden');
+                editorPassInput.value = '';
+                currentAuthenticatedEditorUser = matched.user;
+
+                startScreen.classList.add('hidden');
+                developerModeScreen.classList.add('hidden');
+                studioApp.classList.remove('hidden');
+                studioApp.classList.add('flex');
+
+                activeEditorBadge.textContent = `Editor: ${matched.user}`;
+                syncTimelineUI();
+                showToast(`Signed in as ${matched.user}`);
+            }
+
+            // Auth Event Listeners
+            tabDeveloperBtn.addEventListener('click', () => switchStartTab('dev'));
+            tabEditorBtn.addEventListener('click', () => switchStartTab('editor'));
+
+            document.getElementById('toggleDevGatePassBtn').addEventListener('click', (e) => {
+                const isPassword = devGatePassInput.type === 'password';
+                devGatePassInput.type = isPassword ? 'text' : 'password';
+                e.target.textContent = isPassword ? 'Hide' : 'Show';
+            });
+
+            document.getElementById('toggleEditorPassBtn').addEventListener('click', (e) => {
+                const isPassword = editorPassInput.type === 'password';
+                editorPassInput.type = isPassword ? 'text' : 'password';
+                e.target.textContent = isPassword ? 'Hide' : 'Show';
+            });
+
+            devGateSubmitBtn.addEventListener('click', handleDeveloperGateSignIn);
+            devGatePassInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleDeveloperGateSignIn();
+            });
+
+            editorLoginSubmitBtn.addEventListener('click', handleEditorSignIn);
+            editorPassInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleEditorSignIn();
+            });
+
+            addEditorAccountBtn.addEventListener('click', () => {
+                if (!isDeveloperAuthenticated) return;
+                const u = newEditorUserInput.value.trim();
+                const p = newEditorPassInput.value.trim();
+                if (!u || !p) {
+                    showToast('Enter both an Editor username and password', 'error');
+                    return;
+                }
+                const list = getEditorAccounts();
+                const existingIdx = list.findIndex((item) => item.user.toLowerCase() === u.toLowerCase());
+                if (existingIdx >= 0) {
+                    list[existingIdx] = { user: u, pass: p };
+                    showToast(`Updated Editor account "${u}"`);
+                } else {
+                    list.push({ user: u, pass: p });
+                    showToast(`Added Editor account "${u}"`);
+                }
+                newEditorUserInput.value = '';
+                newEditorPassInput.value = '';
+                saveEditorAccounts(list);
+            });
+
+            saveDevCredsBtn.addEventListener('click', () => {
+                if (!isDeveloperAuthenticated) return;
+                const u = updateDevUserInput.value.trim();
+                const p = updateDevPassInput.value.trim();
+                if (!u || !p) {
+                    showToast('Developer username and password cannot be empty', 'error');
+                    return;
+                }
+                const saved = saveDevCredentials({ user: u, pass: p });
+                currentAuthenticatedDevUser = saved.user;
+                devSessionUserBadge.textContent = `Signed in: ${saved.user}`;
+                showToast('Developer credentials updated');
+            });
+
+            resetDefaultDevCredsBtn.addEventListener('click', () => {
+                if (!isDeveloperAuthenticated) return;
+                const restored = saveDevCredentials(DEFAULT_DEV_CREDS);
+                updateDevUserInput.value = restored.user;
+                updateDevPassInput.value = restored.pass;
+                currentAuthenticatedDevUser = restored.user;
+                devSessionUserBadge.textContent = `Signed in: ${restored.user}`;
+                showToast('Reset Developer credentials to default (tronguy)');
+            });
+
+            document.getElementById('devGoToEditorTabBtn').addEventListener('click', () => {
+                showStartScreen('editor');
+            });
+            document.getElementById('devLockToStartBtn').addEventListener('click', () => {
+                showStartScreen('dev');
+            });
+            document.getElementById('lockToStartScreenBtn').addEventListener('click', () => {
+                showStartScreen('editor');
+            });
+
+            // Seed default developer credentials on initial load
+            getDevCredentials();
+            getEditorAccounts();
+
+            // =========================================================================
+            // 2. 1080x1920 LIVE CANVAS STUDIO, AUTO-SPLITTER & EXPORT ENGINE
+            // =========================================================================
+            const previewCanvas = document.getElementById('previewCanvas');
+            const previewCtx = previewCanvas.getContext('2d');
+            const exportCanvas = document.getElementById('exportCanvas');
+            const exportCtx = exportCanvas.getContext('2d');
+            const sourceVideo = document.getElementById('sourceVideo');
+
+            const TARGET_WIDTH = 1080;
+            const TARGET_HEIGHT = 1920;
+            previewCanvas.width = TARGET_WIDTH;
+            previewCanvas.height = TARGET_HEIGHT;
+
+            const videoFileInput = document.getElementById('videoFileInput');
+            const dropZone = document.getElementById('dropZone');
+            const noVideoHint = document.getElementById('noVideoHint');
+            const captionInput = document.getElementById('captionInput');
+            const fontSizeSlider = document.getElementById('fontSizeSlider');
+            const gapSlider = document.getElementById('gapSlider');
+            const lineHeightSlider = document.getElementById('lineHeightSlider');
+            const zoomSlider = document.getElementById('zoomSlider');
+            const themeWhiteBtn = document.getElementById('themeWhiteBtn');
+            const themeBlackBtn = document.getElementById('themeBlackBtn');
+            const fontWeightToggle = document.getElementById('fontWeightToggle');
+            const textAlignToggle = document.getElementById('textAlignToggle');
+            const clearCaptionBtn = document.getElementById('clearCaptionBtn');
+
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const playIcon = document.getElementById('playIcon');
+            const pauseIcon = document.getElementById('pauseIcon');
+            const playPauseLabel = document.getElementById('playPauseLabel');
+            const seekBack5Btn = document.getElementById('seekBack5Btn');
+            const seekBack1Btn = document.getElementById('seekBack1Btn');
+            const seekFwd1Btn = document.getElementById('seekFwd1Btn');
+            const seekFwd5Btn = document.getElementById('seekFwd5Btn');
+            const startRange = document.getElementById('startRange');
+            const endRange = document.getElementById('endRange');
+            const playheadScrubber = document.getElementById('playheadScrubber');
+            const selectedRangeBar = document.getElementById('selectedRangeBar');
+            const playheadMarker = document.getElementById('playheadMarker');
+            const setStartNowBtn = document.getElementById('setStartNowBtn');
+            const setEndNowBtn = document.getElementById('setEndNowBtn');
+            const loopClipCheckbox = document.getElementById('loopClipCheckbox');
+
+            const saveToQueueBtn = document.getElementById('saveToQueueBtn');
+            const clearQueueBtn = document.getElementById('clearQueueBtn');
+            const clipQueueList = document.getElementById('clipQueueList');
+            const queueCount = document.getElementById('queueCount');
+            const batchExportAllBtn = document.getElementById('batchExportAllBtn');
+            const batchExportBtnText = document.getElementById('batchExportBtnText');
+            const exportClipBtn = document.getElementById('exportClipBtn');
+            const exportSnapshotBtn = document.getElementById('exportSnapshotBtn');
+            const exportProgressContainer = document.getElementById('exportProgressContainer');
+            const exportProgressBar = document.getElementById('exportProgressBar');
+            const exportStatusText = document.getElementById('exportStatusText');
+            const exportPercentText = document.getElementById('exportPercentText');
+            const cancelExportBtn = document.getElementById('cancelExportBtn');
+            const downloadReadyBox = document.getElementById('downloadReadyBox');
+            const manualDownloadLink = document.getElementById('manualDownloadLink');
+            const downloadMetaText = document.getElementById('downloadMetaText');
+
+            const bulkCaptionsInput = document.getElementById('bulkCaptionsInput');
+            const pastedCaptionCountBadge = document.getElementById('pastedCaptionCountBadge');
+            const queueMatchCountBadge = document.getElementById('queueMatchCountBadge');
+
+            const state = {
+                hasVideo: false,
+                currentVideoFile: null,
+                videoDuration: 10,
+                startTime: 0,
+                endTime: 10,
+                theme: 'white',
+                caption: "Glen Powell as a country singer? Yeah, we're seated",
+                fontSize: 44,
+                gapAboveVideo: 42,
+                lineHeight: 1.28,
+                videoZoom: 100,
+                fontWeightIndex: 1,
+                textAlignIndex: 0,
+                clipQueue: [],
+                activeReelIndex: -1,
+                bulkDelimiterMode: 'line',
+                briefImageBase64: null,
+                briefImageMimeType: 'image/png',
+                parsedBrief: null,
+                isExporting: false,
+                cancelExportFlag: false,
+                currentObjectUrl: null,
+                lastExportUrl: null
+            };
+
+            const FONT_WEIGHTS = [
+                { weight: '400', label: 'Regular (400)' },
+                { weight: '500', label: 'Medium (500)' },
+                { weight: '700', label: 'Bold (700)' }
+            ];
+
+            const TEXT_ALIGNS = [
+                { align: 'center', label: 'Center' },
+                { align: 'left', label: 'Left' }
+            ];
+
+            let audioCtx = null;
+            let mediaElementSource = null;
+            let audioDestination = null;
+            let toastTimer = null;
+
+            function showToast(message, type = 'success') {
+                const banner = document.getElementById('toastBanner');
+                const text = document.getElementById('toastText');
+                const dot = document.getElementById('toastDot');
+                text.textContent = message;
+                dot.className = 'w-2 h-2 rounded-full ' + (
+                    type === 'error' ? 'bg-rose-400' :
+                    type === 'info' ? 'bg-blue-400' : 'bg-emerald-400'
+                );
+                banner.classList.remove('opacity-0', '-translate-y-2');
+                banner.classList.add('opacity-100', 'translate-y-0');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => {
+                    banner.classList.remove('opacity-100', 'translate-y-0');
+                    banner.classList.add('opacity-0', '-translate-y-2');
+                }, 2600);
+            }
+
+            function escapeHtml(str) {
+                return String(str || '').replace(/[&<>"']/g, (m) => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+                }[m]));
+            }
+
+            function formatTime(sec) {
+                if (!isFinite(sec) || sec < 0) sec = 0;
+                const mins = Math.floor(sec / 60);
+                const secs = Math.floor(sec % 60);
+                const tenths = Math.floor((sec % 1) * 10);
+                return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${tenths}`;
+            }
+
+            function wrapTextLines(ctx, text, maxWidth) {
+                if (!text || !text.trim()) return [];
+                const paragraphs = text.split('\n');
+                const lines = [];
+                for (const para of paragraphs) {
+                    const words = para.split(/\s+/);
+                    let currentLine = '';
+                    for (let i = 0; i < words.length; i++) {
+                        const word = words[i];
+                        const testLine = currentLine ? `${currentLine} ${word}` : word;
+                        if (ctx.measureText(testLine).width > maxWidth && currentLine !== '') {
+                            lines.push(currentLine);
+                            currentLine = word;
+                        } else {
+                            currentLine = testLine;
+                        }
+                    }
+                    if (currentLine) lines.push(currentLine);
+                }
+                return lines;
+            }
+
+            function renderCompositeFrame(ctx) {
+                const W = TARGET_WIDTH;
+                const H = TARGET_HEIGHT;
+                const isWhite = state.theme === 'white';
+
+                ctx.fillStyle = isWhite ? '#FFFFFF' : '#000000';
+                ctx.fillRect(0, 0, W, H);
+
+                let srcW = 1920;
+                let srcH = 1080;
+                if (state.hasVideo && sourceVideo.videoWidth > 0 && sourceVideo.videoHeight > 0) {
+                    srcW = sourceVideo.videoWidth;
+                    srcH = sourceVideo.videoHeight;
+                }
+
+                const aspect = srcW / srcH;
+                const zoomFactor = state.videoZoom / 100;
+                const baseDrawW = W;
+                const baseDrawH = Math.round(W / aspect);
+                const frameBoxH = Math.min(baseDrawH, Math.round(H * 0.62));
+                const frameBoxY = Math.round((H - frameBoxH) / 2);
+
+                const zoomedW = baseDrawW * zoomFactor;
+                const zoomedH = (baseDrawW / aspect) * zoomFactor;
+                const drawX = (W - zoomedW) / 2;
+                const drawY = frameBoxY + (frameBoxH - zoomedH) / 2;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(0, frameBoxY, W, frameBoxH);
+                ctx.clip();
+
+                if (state.hasVideo && sourceVideo.readyState >= 2) {
+                    ctx.drawImage(sourceVideo, drawX, drawY, zoomedW, zoomedH);
+                } else {
+                    const grad = ctx.createLinearGradient(0, frameBoxY, W, frameBoxY + frameBoxH);
+                    grad.addColorStop(0, '#181412');
+                    grad.addColorStop(0.5, '#2c221b');
+                    grad.addColorStop(1, '#111317');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, frameBoxY, W, frameBoxH);
+
+                    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+                    ctx.font = '600 32px Inter, -apple-system, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('16:9 VIDEO PREVIEW AREA', W / 2, frameBoxY + frameBoxH / 2 - 18);
+
+                    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+                    ctx.font = '400 24px Inter, -apple-system, sans-serif';
+                    ctx.fillText('Load any long-form video from your iPad', W / 2, frameBoxY + frameBoxH / 2 + 24);
+                }
+                ctx.restore();
+
+                const captionText = state.caption;
+                if (captionText && captionText.trim().length > 0) {
+                    const weightObj = FONT_WEIGHTS[state.fontWeightIndex];
+                    const alignObj = TEXT_ALIGNS[state.textAlignIndex];
+                    const fontSize = state.fontSize;
+                    const lineHeightPx = Math.round(fontSize * state.lineHeight);
+                    const horizontalPadding = 72;
+                    const maxTextWidth = W - horizontalPadding * 2;
+
+                    ctx.font = `${weightObj.weight} ${fontSize}px Inter, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif`;
+                    ctx.fillStyle = isWhite ? '#111111' : '#F9FAFB';
+                    ctx.textBaseline = 'alphabetic';
+
+                    const lines = wrapTextLines(ctx, captionText, maxTextWidth);
+                    const bottomBaselineY = frameBoxY - state.gapAboveVideo;
+                    const firstBaselineY = bottomBaselineY - (lines.length - 1) * lineHeightPx;
+
+                    lines.forEach((line, idx) => {
+                        const y = firstBaselineY + idx * lineHeightPx;
+                        if (alignObj.align === 'center') {
+                            ctx.textAlign = 'center';
+                            ctx.fillText(line, W / 2, y);
+                        } else {
+                            ctx.textAlign = 'left';
+                            ctx.fillText(line, horizontalPadding, y);
+                        }
+                    });
+                }
+            }
+
+            function previewLoop() {
+                if (state.hasVideo && !sourceVideo.paused && !state.isExporting) {
+                    if (loopClipCheckbox.checked && sourceVideo.currentTime >= state.endTime) {
+                        sourceVideo.currentTime = state.startTime;
+                    }
+                    syncTimelineUI();
+                }
+                if (!studioApp.classList.contains('hidden')) {
+                    renderCompositeFrame(previewCtx);
+                }
+                requestAnimationFrame(previewLoop);
+            }
+
+            function syncTimelineUI() {
+                const dur = state.videoDuration || 10;
+                const cur = state.hasVideo ? sourceVideo.currentTime : state.startTime;
+
+                document.getElementById('currentTimeBadge').textContent = formatTime(cur);
+                document.getElementById('startTimeDisplay').textContent = formatTime(state.startTime);
+                document.getElementById('endTimeDisplay').textContent = formatTime(state.endTime);
+
+                const clipLen = Math.max(0.1, state.endTime - state.startTime);
+                document.getElementById('clipDurationBadge').textContent = `Clip: ${formatTime(clipLen)}s`;
+
+                const startPct = (state.startTime / dur) * 100;
+                const endPct = (state.endTime / dur) * 100;
+                const curPct = Math.min(100, Math.max(0, (cur / dur) * 100));
+
+                startRange.value = startPct;
+                endRange.value = endPct;
+                playheadScrubber.value = curPct;
+
+                selectedRangeBar.style.left = `${startPct}%`;
+                selectedRangeBar.style.width = `${Math.max(0, endPct - startPct)}%`;
+                playheadMarker.style.left = `${curPct}%`;
+            }
+
+            function updatePlayPauseIcons() {
+                if (sourceVideo.paused) {
+                    playIcon.classList.remove('hidden');
+                    pauseIcon.classList.add('hidden');
+                    playPauseLabel.textContent = 'Play Loop';
+                } else {
+                    playIcon.classList.add('hidden');
+                    pauseIcon.classList.remove('hidden');
+                    playPauseLabel.textContent = 'Pause';
+                }
+            }
+
+            function handleVideoFile(file) {
+                if (!file) return;
+                if (state.currentObjectUrl) {
+                    URL.revokeObjectURL(state.currentObjectUrl);
+                }
+
+                state.currentVideoFile = file;
+                const url = URL.createObjectURL(file);
+                state.currentObjectUrl = url;
+                sourceVideo.src = url;
+                sourceVideo.load();
+
+                sourceVideo.onloadedmetadata = () => {
+                    state.hasVideo = true;
+                    state.videoDuration = sourceVideo.duration || 10;
+                    state.startTime = 0;
+                    state.endTime = Math.min(state.videoDuration, 15);
+                    sourceVideo.currentTime = 0;
+
+                    noVideoHint.classList.add('hidden');
+                    downloadReadyBox.classList.add('hidden');
+                    syncTimelineUI();
+                    updatePlayPauseIcons();
+                    showToast(`Loaded "${file.name}" (${formatTime(state.videoDuration)})`);
+                };
+
+                sourceVideo.onerror = () => {
+                    showToast('Could not decode this video format in browser.', 'error');
+                };
+            }
+
+            videoFileInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    handleVideoFile(e.target.files[0]);
+                }
+            });
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('ring-2', 'ring-blue-500');
+            });
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('ring-2', 'ring-blue-500');
+            });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('ring-2', 'ring-blue-500');
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    handleVideoFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            playPauseBtn.addEventListener('click', async () => {
+                if (!state.hasVideo) {
+                    showToast('Load a video first to play & trim', 'info');
+                    videoFileInput.click();
+                    return;
+                }
+                if (sourceVideo.paused) {
+                    if (sourceVideo.currentTime < state.startTime || sourceVideo.currentTime >= state.endTime) {
+                        sourceVideo.currentTime = state.startTime;
+                    }
+                    try {
+                        await sourceVideo.play();
+                    } catch (err) {
+                        showToast('Tap Play again to start playback', 'info');
+                    }
+                } else {
+                    sourceVideo.pause();
+                }
+                updatePlayPauseIcons();
+            });
+
+            sourceVideo.addEventListener('play', updatePlayPauseIcons);
+            sourceVideo.addEventListener('pause', updatePlayPauseIcons);
+
+            function seekBy(delta) {
+                if (!state.hasVideo) return;
+                sourceVideo.currentTime = Math.min(state.videoDuration, Math.max(0, sourceVideo.currentTime + delta));
+                syncTimelineUI();
+            }
+
+            seekBack5Btn.addEventListener('click', () => seekBy(-5));
+            seekBack1Btn.addEventListener('click', () => seekBy(-1));
+            seekFwd1Btn.addEventListener('click', () => seekBy(1));
+            seekFwd5Btn.addEventListener('click', () => seekBy(5));
+
+            startRange.addEventListener('input', () => {
+                const dur = state.videoDuration || 10;
+                let newStart = (parseFloat(startRange.value) / 100) * dur;
+                if (newStart >= state.endTime - 0.2) {
+                    newStart = Math.max(0, state.endTime - 0.2);
+                }
+                state.startTime = newStart;
+                if (state.activeReelIndex >= 0 && state.clipQueue[state.activeReelIndex]) {
+                    state.clipQueue[state.activeReelIndex].startTime = newStart;
+                    renderClipQueue();
+                }
+                if (state.hasVideo) sourceVideo.currentTime = newStart;
+                syncTimelineUI();
+            });
+
+            endRange.addEventListener('input', () => {
+                const dur = state.videoDuration || 10;
+                let newEnd = (parseFloat(endRange.value) / 100) * dur;
+                if (newEnd <= state.startTime + 0.2) {
+                    newEnd = Math.min(dur, state.startTime + 0.2);
+                }
+                state.endTime = newEnd;
+                if (state.activeReelIndex >= 0 && state.clipQueue[state.activeReelIndex]) {
+                    state.clipQueue[state.activeReelIndex].endTime = newEnd;
+                    renderClipQueue();
+                }
+                if (state.hasVideo) sourceVideo.currentTime = newEnd;
+                syncTimelineUI();
+            });
+
+            playheadScrubber.addEventListener('input', () => {
+                if (!state.hasVideo) return;
+                const dur = state.videoDuration || 10;
+                sourceVideo.currentTime = (parseFloat(playheadScrubber.value) / 100) * dur;
+                syncTimelineUI();
+            });
+
+            setStartNowBtn.addEventListener('click', () => {
+                if (!state.hasVideo) return;
+                state.startTime = sourceVideo.currentTime;
+                if (state.endTime <= state.startTime + 0.2) {
+                    state.endTime = Math.min(state.videoDuration, state.startTime + 5);
+                }
+                if (state.activeReelIndex >= 0 && state.clipQueue[state.activeReelIndex]) {
+                    state.clipQueue[state.activeReelIndex].startTime = state.startTime;
+                    state.clipQueue[state.activeReelIndex].endTime = state.endTime;
+                    renderClipQueue();
+                }
+                syncTimelineUI();
+                showToast(`Start set to ${formatTime(state.startTime)}`);
+            });
+
+            setEndNowBtn.addEventListener('click', () => {
+                if (!state.hasVideo) return;
+                const cur = sourceVideo.currentTime;
+                if (cur <= state.startTime + 0.2) {
+                    showToast('End time must be after Start time', 'error');
+                    return;
+                }
+                state.endTime = cur;
+                if (state.activeReelIndex >= 0 && state.clipQueue[state.activeReelIndex]) {
+                    state.clipQueue[state.activeReelIndex].endTime = state.endTime;
+                    renderClipQueue();
+                }
+                syncTimelineUI();
+                showToast(`End set to ${formatTime(state.endTime)}`);
+            });
+
+            captionInput.addEventListener('input', (e) => {
+                state.caption = e.target.value;
+                if (state.activeReelIndex >= 0 && state.clipQueue[state.activeReelIndex]) {
+                    state.clipQueue[state.activeReelIndex].caption = state.caption;
+                    const inlineInput = document.querySelector(`[data-reel-caption-idx="${state.activeReelIndex}"]`);
+                    if (inlineInput && document.activeElement !== inlineInput) {
+                        inlineInput.value = state.caption;
+                    }
+                }
+            });
+
+            clearCaptionBtn.addEventListener('click', () => {
+                state.caption = '';
+                captionInput.value = '';
+                if (state.activeReelIndex >= 0 && state.clipQueue[state.activeReelIndex]) {
+                    state.clipQueue[state.activeReelIndex].caption = '';
+                    renderClipQueue();
+                }
+                captionInput.focus();
+            });
+
+            fontWeightToggle.addEventListener('click', () => {
+                state.fontWeightIndex = (state.fontWeightIndex + 1) % FONT_WEIGHTS.length;
+                document.getElementById('fontWeightLabel').textContent = FONT_WEIGHTS[state.fontWeightIndex].label;
+            });
+
+            textAlignToggle.addEventListener('click', () => {
+                state.textAlignIndex = (state.textAlignIndex + 1) % TEXT_ALIGNS.length;
+                document.getElementById('textAlignLabel').textContent = TEXT_ALIGNS[state.textAlignIndex].label;
+            });
+
+            fontSizeSlider.addEventListener('input', (e) => {
+                state.fontSize = parseInt(e.target.value, 10);
+                document.getElementById('fontSizeVal').textContent = `${state.fontSize} px`;
+            });
+
+            gapSlider.addEventListener('input', (e) => {
+                state.gapAboveVideo = parseInt(e.target.value, 10);
+                document.getElementById('gapVal').textContent = `${state.gapAboveVideo} px`;
+            });
+
+            lineHeightSlider.addEventListener('input', (e) => {
+                state.lineHeight = parseFloat(e.target.value);
+                document.getElementById('lineHeightVal').textContent = `${state.lineHeight.toFixed(2)}×`;
+            });
+
+            zoomSlider.addEventListener('input', (e) => {
+                state.videoZoom = parseInt(e.target.value, 10);
+                document.getElementById('zoomVal').textContent = state.videoZoom === 100 ? '100% (Fit)' : `${state.videoZoom}%`;
+            });
+
+            themeWhiteBtn.addEventListener('click', () => {
+                state.theme = 'white';
+                themeWhiteBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-black shadow-sm transition';
+                themeBlackBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white transition';
+                document.getElementById('previewStageContainer').style.backgroundColor = '#ffffff';
+                if (state.activeReelIndex >= 0 && state.clipQueue[state.activeReelIndex]) {
+                    state.clipQueue[state.activeReelIndex].theme = 'white';
+                }
+            });
+
+            themeBlackBtn.addEventListener('click', () => {
+                state.theme = 'black';
+                themeBlackBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-700 text-white shadow-sm transition';
+                themeWhiteBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white transition';
+                document.getElementById('previewStageContainer').style.backgroundColor = '#000000';
+                if (state.activeReelIndex >= 0 && state.clipQueue[state.activeReelIndex]) {
+                    state.clipQueue[state.activeReelIndex].theme = 'black';
+                }
+            });
+
+            function parseTimecodeToSeconds(tc) {
+                if (!tc) return null;
+                const parts = tc.trim().split(':').map(Number);
+                if (parts.some(isNaN)) return null;
+                if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+                if (parts.length === 2) return parts[0] * 60 + parts[1];
+                if (parts.length === 1) return parts[0];
+                return null;
+            }
+
+            function parseBulkCaptionsList() {
+                const raw = bulkCaptionsInput.value || '';
+                if (!raw.trim()) return [];
+                const blocks = state.bulkDelimiterMode === 'blank'
+                    ? raw.split(/\n\s*\n|^---+$/m)
+                    : raw.split(/\r?\n/);
+
+                return blocks
+                    .map((b) => b.trim())
+                    .filter((b) => b.length > 0 && !/^---+$/.test(b))
+                    .map((b) => b.replace(/^(?:(?:reel|clip|video|caption)\s*#?\d+\s*[:\-\.\)]\s*|\d+\s*[\.\)\-:]\s*)/i, '').trim())
+                    .filter((b) => b.length > 0);
+            }
+
+            function updateBulkCaptionCounters() {
+                const captions = parseBulkCaptionsList();
+                pastedCaptionCountBadge.textContent = `${captions.length} caption${captions.length === 1 ? '' : 's'}`;
+                queueMatchCountBadge.textContent = `${state.clipQueue.length} reel${state.clipQueue.length === 1 ? '' : 's'}`;
+            }
+
+            bulkCaptionsInput.addEventListener('input', updateBulkCaptionCounters);
+
+            const delimLineBtn = document.getElementById('delimLineBtn');
+            const delimBlankBtn = document.getElementById('delimBlankBtn');
+
+            delimLineBtn.addEventListener('click', () => {
+                state.bulkDelimiterMode = 'line';
+                delimLineBtn.className = 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500 text-black transition';
+                delimBlankBtn.className = 'px-2.5 py-1 rounded-lg text-[11px] font-semibold text-zinc-400 hover:text-white transition';
+                updateBulkCaptionCounters();
+            });
+
+            delimBlankBtn.addEventListener('click', () => {
+                state.bulkDelimiterMode = 'blank';
+                delimBlankBtn.className = 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500 text-black transition';
+                delimLineBtn.className = 'px-2.5 py-1 rounded-lg text-[11px] font-semibold text-zinc-400 hover:text-white transition';
+                updateBulkCaptionCounters();
+            });
+
+            document.getElementById('pasteClipboardBulkBtn').addEventListener('click', async () => {
+                try {
+                    if (navigator.clipboard && navigator.clipboard.readText) {
+                        const text = await navigator.clipboard.readText();
+                        if (text) {
+                            bulkCaptionsInput.value = text;
+                            updateBulkCaptionCounters();
+                            showToast(`Pasted ${parseBulkCaptionsList().length} captions from clipboard`);
+                            return;
+                        }
+                    }
+                } catch (err) {}
+                bulkCaptionsInput.focus();
+                showToast('Tap inside the box and press Paste', 'info');
+            });
+
+            function selectReelFromQueue(index, shouldSeek = true) {
+                if (index < 0 || index >= state.clipQueue.length) return;
+                const item = state.clipQueue[index];
+                state.activeReelIndex = index;
+                state.startTime = item.startTime;
+                state.endTime = item.endTime;
+                state.caption = item.caption;
+                state.theme = item.theme || state.theme;
+                captionInput.value = item.caption;
+
+                const socialPostBuilderBox = document.getElementById('socialPostBuilderBox');
+                const activeSocialPostTextarea = document.getElementById('activeSocialPostTextarea');
+                if (item.postCaption || (state.parsedBrief && state.parsedBrief.mandatoryCta)) {
+                    socialPostBuilderBox.classList.remove('hidden');
+                    activeSocialPostTextarea.value = item.postCaption || buildSocialPostCaption(item.caption);
+                }
+
+                if (state.hasVideo && shouldSeek) {
+                    sourceVideo.currentTime = item.startTime;
+                }
+                syncTimelineUI();
+                renderClipQueue();
+            }
+
+            document.getElementById('mapCaptionsToReelsBtn').addEventListener('click', () => {
+                const captions = parseBulkCaptionsList();
+                if (captions.length === 0) {
+                    showToast('Paste captions first', 'error');
+                    return;
+                }
+                if (state.clipQueue.length === 0) {
+                    const dur = state.videoDuration || (captions.length * 15);
+                    const sliceLen = dur / captions.length;
+                    state.clipQueue = captions.map((cap, i) => ({
+                        startTime: Number((i * sliceLen).toFixed(2)),
+                        endTime: Number(Math.min(dur, (i + 1) * sliceLen).toFixed(2)),
+                        caption: cap,
+                        postCaption: buildSocialPostCaption(cap),
+                        theme: state.theme,
+                        status: 'Ready'
+                    }));
+                    selectReelFromQueue(0);
+                    showToast(`Created ${captions.length} Reels & mapped captions`);
+                    return;
+                }
+                const count = Math.min(captions.length, state.clipQueue.length);
+                for (let i = 0; i < count; i++) {
+                    state.clipQueue[i].caption = captions[i];
+                    state.clipQueue[i].postCaption = buildSocialPostCaption(captions[i]);
+                }
+                selectReelFromQueue(state.activeReelIndex >= 0 ? state.activeReelIndex : 0, false);
+                showToast(`Mapped ${count} captions to Reels`);
+            });
+
+            document.getElementById('splitToMatchCaptionsBtn').addEventListener('click', () => {
+                const captions = parseBulkCaptionsList();
+                if (captions.length === 0) {
+                    showToast('Paste captions first', 'error');
+                    return;
+                }
+                const dur = state.videoDuration || (captions.length * 15);
+                const sliceLen = dur / captions.length;
+                state.clipQueue = captions.map((cap, idx) => ({
+                    startTime: Number((idx * sliceLen).toFixed(2)),
+                    endTime: Number(Math.min(dur, (idx + 1) * sliceLen).toFixed(2)),
+                    caption: cap,
+                    postCaption: buildSocialPostCaption(cap),
+                    theme: state.theme,
+                    status: 'Ready'
+                }));
+                selectReelFromQueue(0);
+                showToast(`Split into ${captions.length} Reels matching captions`);
+            });
+
+            const splitModeIntervalBtn = document.getElementById('splitModeIntervalBtn');
+            const splitModePeaksBtn = document.getElementById('splitModePeaksBtn');
+            const splitModeScriptBtn = document.getElementById('splitModeScriptBtn');
+            const splitPanelInterval = document.getElementById('splitPanelInterval');
+            const splitPanelPeaks = document.getElementById('splitPanelPeaks');
+            const splitPanelScript = document.getElementById('splitPanelScript');
+
+            function switchSplitTab(mode) {
+                const activeCls = 'py-2 px-2 rounded-lg text-xs font-bold bg-purple-600 text-white shadow transition';
+                const inactiveCls = 'py-2 px-2 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white transition';
+                splitModeIntervalBtn.className = mode === 'interval' ? activeCls : inactiveCls;
+                splitModePeaksBtn.className = mode === 'peaks' ? activeCls : inactiveCls;
+                splitModeScriptBtn.className = mode === 'script' ? activeCls : inactiveCls;
+                splitPanelInterval.classList.toggle('hidden', mode !== 'interval');
+                splitPanelPeaks.classList.toggle('hidden', mode !== 'peaks');
+                splitPanelScript.classList.toggle('hidden', mode !== 'script');
+            }
+
+            splitModeIntervalBtn.addEventListener('click', () => switchSplitTab('interval'));
+            splitModePeaksBtn.addEventListener('click', () => switchSplitTab('peaks'));
+            splitModeScriptBtn.addEventListener('click', () => switchSplitTab('script'));
+
+            const intervalDurationSelect = document.getElementById('intervalDurationSelect');
+            const customIntervalInput = document.getElementById('customIntervalInput');
+            intervalDurationSelect.addEventListener('change', () => {
+                customIntervalInput.classList.toggle('hidden', intervalDurationSelect.value !== 'custom');
+            });
+
+            document.getElementById('runIntervalSplitBtn').addEventListener('click', () => {
+                if (!state.hasVideo) {
+                    showToast('Load a video first', 'error');
+                    videoFileInput.click();
+                    return;
+                }
+                const dur = state.videoDuration;
+                const rawLen = intervalDurationSelect.value === 'custom'
+                    ? Math.max(3, parseFloat(customIntervalInput.value) || 25)
+                    : parseFloat(intervalDurationSelect.value);
+                const overlap = parseFloat(document.getElementById('intervalOverlapSelect').value) || 0;
+                const minTail = parseFloat(document.getElementById('minTailSelect').value) || 8;
+                const step = Math.max(2, rawLen - overlap);
+                const pastedCaptions = parseBulkCaptionsList();
+
+                const segments = [];
+                let cursor = 0;
+                while (cursor < dur - 0.5) {
+                    let end = Math.min(dur, cursor + rawLen);
+                    if (dur - end > 0 && dur - end < minTail) end = dur;
+                    const idx = segments.length;
+                    const cap = pastedCaptions[idx] !== undefined ? pastedCaptions[idx] : state.caption;
+                    segments.push({
+                        startTime: Number(cursor.toFixed(2)),
+                        endTime: Number(end.toFixed(2)),
+                        caption: cap,
+                        postCaption: buildSocialPostCaption(cap),
+                        theme: state.theme,
+                        status: 'Ready'
+                    });
+                    if (end >= dur) break;
+                    cursor += step;
+                }
+
+                state.clipQueue = segments;
+                selectReelFromQueue(0);
+                showToast(`Generated ${segments.length} Reels`);
+            });
+
+            document.getElementById('runPeakSplitBtn').addEventListener('click', async () => {
+                if (!state.hasVideo || !state.currentVideoFile) {
+                    showToast('Load a video first', 'error');
+                    videoFileInput.click();
+                    return;
+                }
+                const peakBtn = document.getElementById('runPeakSplitBtn');
+                const peakBtnLabel = document.getElementById('peakBtnLabel');
+                const targetCount = parseInt(document.getElementById('peakCountSelect').value, 10) || 5;
+                const windowSec = parseFloat(document.getElementById('peakWindowSelect').value) || 25;
+                const dur = state.videoDuration;
+
+                peakBtn.disabled = true;
+                peakBtnLabel.textContent = 'Analyzing Audio...';
+
+                try {
+                    const arrayBuffer = await state.currentVideoFile.arrayBuffer();
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    const tempCtx = new AudioContextClass();
+                    const audioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+                    const channelData = audioBuffer.getChannelData(0);
+                    const sampleRate = audioBuffer.sampleRate;
+                    const totalSecs = Math.max(1, Math.floor(audioBuffer.duration));
+                    const energies = [];
+
+                    for (let s = 0; s < totalSecs; s++) {
+                        const startSample = s * sampleRate;
+                        const endSample = Math.min(channelData.length, (s + 1) * sampleRate);
+                        let sumSq = 0;
+                        let count = 0;
+                        for (let i = startSample; i < endSample; i += 8) {
+                            sumSq += channelData[i] * channelData[i];
+                            count++;
+                        }
+                        energies.push({ sec: s, rms: count > 0 ? Math.sqrt(sumSq / count) : 0 });
+                    }
+                    await tempCtx.close();
+
+                    const sorted = [...energies].sort((a, b) => b.rms - a.rms);
+                    const peaks = [];
+                    const minGap = Math.max(5, windowSec * 0.75);
+                    for (const item of sorted) {
+                        if (peaks.length >= targetCount) break;
+                        if (!peaks.some((p) => Math.abs(p - item.sec) < minGap)) {
+                            peaks.push(item.sec);
+                        }
+                    }
+                    peaks.sort((a, b) => a - b);
+
+                    const pastedCaptions = parseBulkCaptionsList();
+                    const preLead = Math.min(5, windowSec * 0.25);
+                    state.clipQueue = peaks.map((peakSec, idx) => {
+                        let start = Math.max(0, peakSec - preLead);
+                        let end = Math.min(dur, start + windowSec);
+                        if (end - start < Math.min(dur, windowSec)) start = Math.max(0, end - windowSec);
+                        const cap = pastedCaptions[idx] !== undefined ? pastedCaptions[idx] : state.caption;
+                        return {
+                            startTime: Number(start.toFixed(2)),
+                            endTime: Number(end.toFixed(2)),
+                            caption: cap,
+                            postCaption: buildSocialPostCaption(cap),
+                            theme: state.theme,
+                            status: 'Ready'
+                        };
+                    });
+
+                    selectReelFromQueue(0);
+                    showToast(`Created ${state.clipQueue.length} peak Reels`);
+                } catch (err) {
+                    showToast('Using interval split fallback', 'info');
+                    document.getElementById('runIntervalSplitBtn').click();
+                } finally {
+                    peakBtn.disabled = false;
+                    peakBtnLabel.textContent = 'Detect Audio Peaks & Create Reels';
+                }
+            });
+
+            document.getElementById('runScriptParseBtn').addEventListener('click', () => {
+                const raw = document.getElementById('timestampScriptInput').value || '';
+                const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+                if (lines.length === 0) {
+                    showToast('Paste timestamp lines first', 'error');
+                    return;
+                }
+                const dur = state.videoDuration || 300;
+                const parsed = [];
+
+                for (const line of lines) {
+                    const rangeMatch = line.match(/^(\d{1,2}:\d{2}(?::\d{2})?)\s*(?:-|–|to)\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*(?:[\|\-\:]\s*)?(.*)$/i);
+                    if (rangeMatch) {
+                        const s = parseTimecodeToSeconds(rangeMatch[1]);
+                        const e = parseTimecodeToSeconds(rangeMatch[2]);
+                        if (s !== null && e !== null && e > s) {
+                            const cap = (rangeMatch[3] || state.caption).trim();
+                            parsed.push({
+                                startTime: Math.min(dur, s),
+                                endTime: Math.min(dur, e),
+                                caption: cap,
+                                postCaption: buildSocialPostCaption(cap),
+                                theme: state.theme,
+                                status: 'Ready'
+                            });
+                            continue;
+                        }
+                    }
+                    const singleMatch = line.match(/^(\d{1,2}:\d{2}(?::\d{2})?)\s*(?:[\|\-\:]\s*)?(.*)$/i);
+                    if (singleMatch) {
+                        const s = parseTimecodeToSeconds(singleMatch[1]);
+                        if (s !== null) {
+                            const cap = (singleMatch[2] || state.caption).trim();
+                            parsed.push({
+                                startTime: Math.min(dur, s),
+                                endTime: Math.min(dur, s + 20),
+                                caption: cap,
+                                postCaption: buildSocialPostCaption(cap),
+                                theme: state.theme,
+                                status: 'Ready'
+                            });
+                        }
+                    }
+                }
+
+                if (parsed.length === 0) {
+                    showToast('Use format: 00:15 - 00:35 | Caption', 'error');
+                    return;
+                }
+                state.clipQueue = parsed;
+                selectReelFromQueue(0);
+                showToast(`Created ${parsed.length} Reels from timestamps`);
+            });
+
+            function renderClipQueue() {
+                queueCount.textContent = state.clipQueue.length;
+                batchExportBtnText.textContent = `Batch Export All Reels (${state.clipQueue.length})`;
+                updateBulkCaptionCounters();
+
+                if (state.clipQueue.length === 0) {
+                    clipQueueList.innerHTML = `
+                        <div class="text-xs text-zinc-500 bg-zinc-900/50 border border-dashed border-zinc-800 rounded-xl p-4 text-center">
+                            No Reels generated yet. Use <strong class="text-purple-300">Smart Auto-Split Engine</strong> above or tap <strong class="text-zinc-300">+ Add Current Cut as New Reel</strong>.
+                        </div>`;
+                    return;
+                }
+
+                clipQueueList.innerHTML = '';
+                state.clipQueue.forEach((item, index) => {
+                    const isSelected = index === state.activeReelIndex;
+                    const row = document.createElement('div');
+                    row.className = `rounded-xl p-3 border transition cursor-pointer space-y-2 ${
+                        isSelected
+                            ? 'bg-blue-950/35 border-blue-500/70 ring-1 ring-blue-500/40'
+                            : 'bg-zinc-900/90 hover:bg-zinc-800/90 border-zinc-800'
+                    }`;
+                    const duration = Math.max(0.1, item.endTime - item.startTime);
+                    const statusBadge = item.status === 'Done'
+                        ? '<span class="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded">Exported ✓</span>'
+                        : item.status === 'Rendering...'
+                        ? '<span class="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded animate-pulse">Rendering...</span>'
+                        : '<span class="text-[10px] font-semibold bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded">Ready</span>';
+
+                    row.innerHTML = `
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-[11px] font-extrabold ${isSelected ? 'bg-blue-500 text-white' : 'bg-zinc-700 text-zinc-200'} px-2 py-0.5 rounded">Reel ${String(index + 1).padStart(2, '0')}</span>
+                                <span class="text-[11px] font-mono text-zinc-300">${formatTime(item.startTime)} → ${formatTime(item.endTime)}</span>
+                                <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">${duration.toFixed(1)}s</span>
+                                ${statusBadge}
+                            </div>
+                            <button type="button" data-action="delete" data-index="${index}" class="p-1.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition shrink-0" title="Remove Reel">
+                                Remove
+                            </button>
+                        </div>
+                        <div>
+                            <input type="text" data-reel-caption-idx="${index}" value="${escapeHtml(item.caption || '')}" placeholder="Caption for Reel ${String(index + 1).padStart(2, '0')}..." class="w-full bg-zinc-950/90 border border-zinc-700/80 focus:border-blue-400 rounded-lg px-2.5 py-2 text-xs text-white placeholder-zinc-500 outline-none select-text">
+                        </div>
+                    `;
+
+                    const inlineInput = row.querySelector(`[data-reel-caption-idx="${index}"]`);
+                    inlineInput.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (state.activeReelIndex !== index) selectReelFromQueue(index);
+                    });
+                    inlineInput.addEventListener('input', (e) => {
+                        item.caption = e.target.value;
+                        if (state.activeReelIndex === index) {
+                            state.caption = e.target.value;
+                            captionInput.value = e.target.value;
+                        }
+                    });
+
+                    row.addEventListener('click', (e) => {
+                        if (e.target.closest('[data-action="delete"]')) {
+                            state.clipQueue.splice(index, 1);
+                            if (state.activeReelIndex === index) {
+                                state.activeReelIndex = state.clipQueue.length > 0 ? 0 : -1;
+                            } else if (state.activeReelIndex > index) {
+                                state.activeReelIndex--;
+                            }
+                            renderClipQueue();
+                            return;
+                        }
+                        selectReelFromQueue(index);
+                    });
+
+                    clipQueueList.appendChild(row);
+                });
+            }
+
+            saveToQueueBtn.addEventListener('click', () => {
+                state.clipQueue.push({
+                    startTime: state.startTime,
+                    endTime: state.endTime,
+                    caption: state.caption,
+                    postCaption: buildSocialPostCaption(state.caption),
+                    theme: state.theme,
+                    status: 'Ready'
+                });
+                selectReelFromQueue(state.clipQueue.length - 1, false);
+                showToast(`Added Reel ${String(state.clipQueue.length).padStart(2, '0')}`);
+            });
+
+            clearQueueBtn.addEventListener('click', () => {
+                state.clipQueue = [];
+                state.activeReelIndex = -1;
+                renderClipQueue();
+                showToast('Cleared Reel queue', 'info');
+            });
+
+            function getBestVideoMimeType() {
+                if (typeof MediaRecorder === 'undefined') return null;
+                const candidates = [
+                    'video/mp4;codecs=avc1,mp4a.40.2',
+                    'video/mp4;codecs=h264,aac',
+                    'video/mp4',
+                    'video/webm;codecs=vp9,opus',
+                    'video/webm;codecs=vp8,opus',
+                    'video/webm'
+                ];
+                for (const mime of candidates) {
+                    if (MediaRecorder.isTypeSupported(mime)) return mime;
+                }
+                return '';
+            }
+
+            const detectedMime = getBestVideoMimeType();
+            if (detectedMime && detectedMime.includes('mp4')) {
+                document.getElementById('formatSupportBadge').textContent = 'Native .MP4';
+                document.getElementById('exportBtnText').textContent = 'Export Active Reel Only (.mp4)';
+            } else if (detectedMime) {
+                document.getElementById('formatSupportBadge').textContent = 'WebM Video';
+                document.getElementById('exportBtnText').textContent = 'Export Active Reel Only (.webm)';
+            }
+
+            exportSnapshotBtn.addEventListener('click', () => {
+                renderCompositeFrame(exportCtx);
+                exportCanvas.toBlob((blob) => {
+                    if (!blob) return;
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `clipframe-9x16-${Date.now()}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(url), 5000);
+                    showToast('Saved 1080×1920 PNG snapshot');
+                }, 'image/png');
+            });
+
+            cancelExportBtn.addEventListener('click', () => {
+                state.cancelExportFlag = true;
+            });
+
+            async function renderSingleSegmentToBlob(segStart, segEnd, segCaption, segTheme, labelPrefix, mimeType) {
+                state.startTime = segStart;
+                state.endTime = segEnd;
+                state.caption = segCaption;
+                state.theme = segTheme || state.theme;
+                captionInput.value = segCaption;
+
+                sourceVideo.pause();
+                sourceVideo.currentTime = segStart;
+
+                await new Promise((resolve) => {
+                    const onSeeked = () => {
+                        sourceVideo.removeEventListener('seeked', onSeeked);
+                        resolve();
+                    };
+                    sourceVideo.addEventListener('seeked', onSeeked);
+                });
+
+                const canvasStream = exportCanvas.captureStream(30);
+                try {
+                    if (!audioCtx) {
+                        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                        audioCtx = new AudioContextClass();
+                        mediaElementSource = audioCtx.createMediaElementSource(sourceVideo);
+                        audioDestination = audioCtx.createMediaStreamDestination();
+                        mediaElementSource.connect(audioDestination);
+                        mediaElementSource.connect(audioCtx.destination);
+                    }
+                    if (audioCtx.state === 'suspended') await audioCtx.resume();
+                    audioDestination.stream.getAudioTracks().forEach((track) => canvasStream.addTrack(track));
+                } catch (audioErr) {
+                    console.warn('Audio routing fallback:', audioErr);
+                }
+
+                const recorder = new MediaRecorder(canvasStream, mimeType ? { mimeType, videoBitsPerSecond: 8000000 } : { videoBitsPerSecond: 8000000 });
+                const chunks = [];
+                recorder.ondataavailable = (e) => {
+                    if (e.data && e.data.size > 0) chunks.push(e.data);
+                };
+                const recordingFinished = new Promise((resolve) => {
+                    recorder.onstop = resolve;
+                });
+
+                const clipDuration = Math.max(0.2, segEnd - segStart);
+                renderCompositeFrame(exportCtx);
+                recorder.start(250);
+                await sourceVideo.play();
+
+                await new Promise((resolve) => {
+                    function stepRender() {
+                        if (state.cancelExportFlag) {
+                            resolve();
+                            return;
+                        }
+                        renderCompositeFrame(exportCtx);
+                        const elapsed = Math.max(0, sourceVideo.currentTime - segStart);
+                        const pct = Math.min(100, Math.round((elapsed / clipDuration) * 100));
+                        exportProgressBar.style.width = `${pct}%`;
+                        exportPercentText.textContent = `${pct}%`;
+                        exportStatusText.textContent = `${labelPrefix}: ${elapsed.toFixed(1)}s / ${clipDuration.toFixed(1)}s...`;
+
+                        if (sourceVideo.currentTime >= segEnd || sourceVideo.ended) {
+                            resolve();
+                        } else {
+                            requestAnimationFrame(stepRender);
+                        }
+                    }
+                    requestAnimationFrame(stepRender);
+                });
+
+                sourceVideo.pause();
+                if (recorder.state !== 'inactive') recorder.stop();
+                await recordingFinished;
+                if (state.cancelExportFlag) return null;
+
+                const actualMime = recorder.mimeType || mimeType || 'video/mp4';
+                const ext = actualMime.includes('webm') ? 'webm' : 'mp4';
+                return { blob: new Blob(chunks, { type: actualMime }), ext };
+            }
+
+            exportClipBtn.addEventListener('click', async () => {
+                if (!state.hasVideo) {
+                    showToast('Load a video first', 'error');
+                    videoFileInput.click();
+                    return;
+                }
+                if (state.isExporting) return;
+
+                const mimeType = getBestVideoMimeType();
+                if (mimeType === null) {
+                    showToast('MediaRecorder unavailable in this browser', 'error');
+                    return;
+                }
+
+                state.isExporting = true;
+                state.cancelExportFlag = false;
+                exportClipBtn.disabled = true;
+                batchExportAllBtn.disabled = true;
+                downloadReadyBox.classList.add('hidden');
+                exportProgressContainer.classList.remove('hidden');
+
+                try {
+                    const activeIdx = state.activeReelIndex;
+                    if (activeIdx >= 0 && state.clipQueue[activeIdx]) {
+                        state.clipQueue[activeIdx].status = 'Rendering...';
+                        renderClipQueue();
+                    }
+
+                    const result = await renderSingleSegmentToBlob(
+                        state.startTime,
+                        state.endTime,
+                        state.caption,
+                        state.theme,
+                        'Rendering 1080×1920 Reel',
+                        mimeType
+                    );
+
+                    if (!state.cancelExportFlag && result) {
+                        if (state.lastExportUrl) URL.revokeObjectURL(state.lastExportUrl);
+                        const downloadUrl = URL.createObjectURL(result.blob);
+                        state.lastExportUrl = downloadUrl;
+                        const reelTag = activeIdx >= 0 ? `Reel_${String(activeIdx + 1).padStart(2, '0')}` : `Reel_${Date.now()}`;
+                        const filename = `${reelTag}_1080x1920.${result.ext}`;
+                        manualDownloadLink.href = downloadUrl;
+                        manualDownloadLink.download = filename;
+                        downloadMetaText.textContent = `1080×1920 • ${(result.blob.size / (1024 * 1024)).toFixed(2)} MB • .${result.ext.toUpperCase()}`;
+                        downloadReadyBox.classList.remove('hidden');
+
+                        const a = document.createElement('a');
+                        a.href = downloadUrl;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+
+                        if (activeIdx >= 0 && state.clipQueue[activeIdx]) {
+                            state.clipQueue[activeIdx].status = 'Done';
+                            renderClipQueue();
+                        }
+                        showToast(`Exported ${filename}`);
+                    }
+                } catch (err) {
+                    showToast('Export interrupted', 'error');
+                } finally {
+                    state.isExporting = false;
+                    exportClipBtn.disabled = false;
+                    batchExportAllBtn.disabled = false;
+                    exportProgressContainer.classList.add('hidden');
+                    sourceVideo.currentTime = state.startTime;
+                    syncTimelineUI();
+                }
+            });
+
+            batchExportAllBtn.addEventListener('click', async () => {
+                if (!state.hasVideo) {
+                    showToast('Load a video first', 'error');
+                    videoFileInput.click();
+                    return;
+                }
+                if (state.clipQueue.length === 0) {
+                    showToast('Add Reels to queue first', 'error');
+                    return;
+                }
+                if (state.isExporting) return;
+
+                const mimeType = getBestVideoMimeType();
+                if (mimeType === null) {
+                    showToast('MediaRecorder unavailable', 'error');
+                    return;
+                }
+
+                state.isExporting = true;
+                state.cancelExportFlag = false;
+                exportClipBtn.disabled = true;
+                batchExportAllBtn.disabled = true;
+                downloadReadyBox.classList.add('hidden');
+                exportProgressContainer.classList.remove('hidden');
+
+                let exportedCount = 0;
+                const total = state.clipQueue.length;
+
+                try {
+                    for (let i = 0; i < total; i++) {
+                        if (state.cancelExportFlag) break;
+                        const reel = state.clipQueue[i];
+                        state.activeReelIndex = i;
+                        reel.status = 'Rendering...';
+                        renderClipQueue();
+
+                        const result = await renderSingleSegmentToBlob(
+                            reel.startTime,
+                            reel.endTime,
+                            reel.caption,
+                            reel.theme,
+                            `Batch Reel ${i + 1}/${total}`,
+                            mimeType
+                        );
+
+                        if (state.cancelExportFlag || !result) {
+                            reel.status = 'Ready';
+                            renderClipQueue();
+                            break;
+                        }
+
+                        const url = URL.createObjectURL(result.blob);
+                        const filename = `Reel_${String(i + 1).padStart(2, '0')}_1080x1920.${result.ext}`;
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        setTimeout(() => URL.revokeObjectURL(url), 15000);
+
+                        reel.status = 'Done';
+                        exportedCount++;
+                        renderClipQueue();
+                        await new Promise((r) => setTimeout(r, 450));
+                    }
+
+                    if (exportedCount > 0) {
+                        downloadMetaText.textContent = `Batch complete: ${exportedCount} Reels exported`;
+                        downloadReadyBox.classList.remove('hidden');
+                        showToast(`Exported ${exportedCount} Reels`);
+                    }
+                } catch (err) {
+                    showToast('Batch export interrupted', 'error');
+                } finally {
+                    state.isExporting = false;
+                    exportClipBtn.disabled = false;
+                    batchExportAllBtn.disabled = false;
+                    exportProgressContainer.classList.add('hidden');
+                    syncTimelineUI();
+                }
+            });
+
+            document.getElementById('downloadHtmlBtn').addEventListener('click', () => {
+                const htmlSource = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+                const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'index.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 5000);
+                showToast('Saved index.html to iPad Files');
+            });
+
+            const helpModal = document.getElementById('helpModal');
+            document.getElementById('helpModalBtn').addEventListener('click', () => {
+                helpModal.classList.remove('hidden');
+                helpModal.classList.add('flex');
+            });
+            const closeHelp = () => {
+                helpModal.classList.add('hidden');
+                helpModal.classList.remove('flex');
+            };
+            document.getElementById('closeHelpModalBtn').addEventListener('click', closeHelp);
+            document.getElementById('gotItBtn').addEventListener('click', closeHelp);
+            helpModal.addEventListener('click', (e) => {
+                if (e.target === helpModal) closeHelp();
+            });
+
+            // =========================================================================
+            // 3. CAMPAIGN RULES SCREENSHOT & BRIEF ANALYZER
+            // =========================================================================
+            const briefScreenshotInput = document.getElementById('briefScreenshotInput');
+            const briefScreenshotPreviewImg = document.getElementById('briefScreenshotPreviewImg');
+            const briefUploadPlaceholder = document.getElementById('briefUploadPlaceholder');
+            const extractedBriefTextInput = document.getElementById('extractedBriefTextInput');
+            const analyzeBriefBtn = document.getElementById('analyzeBriefBtn');
+            const analyzeBriefBtnText = document.getElementById('analyzeBriefBtnText');
+            const ocrProgressBox = document.getElementById('ocrProgressBox');
+            const ocrStatusLabel = document.getElementById('ocrStatusLabel');
+            const ocrPercentLabel = document.getElementById('ocrPercentLabel');
+            const ocrProgressBar = document.getElementById('ocrProgressBar');
+            const parsedBriefSummaryBox = document.getElementById('parsedBriefSummaryBox');
+            const parsedScenesCountLabel = document.getElementById('parsedScenesCountLabel');
+            const parsedEditingRuleLabel = document.getElementById('parsedEditingRuleLabel');
+            const parsedScenesPills = document.getElementById('parsedScenesPills');
+            const parsedCtaPreviewRow = document.getElementById('parsedCtaPreviewRow');
+            const parsedCtaPreviewText = document.getElementById('parsedCtaPreviewText');
+            const campaignMetaBadges = document.getElementById('campaignMetaBadges');
+            const geminiKeyDrawer = document.getElementById('geminiKeyDrawer');
+            const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
+            const geminiKeyStatusBadge = document.getElementById('geminiKeyStatusBadge');
+
+            const savedGeminiKey = localStorage.getItem('clipframe_gemini_api_key') || '';
+            if (savedGeminiKey) {
+                geminiApiKeyInput.value = savedGeminiKey;
+                geminiKeyStatusBadge.textContent = 'Gemini Vision Active';
+                geminiKeyStatusBadge.className = 'text-[10px] font-mono text-emerald-400';
+            }
+
+            document.getElementById('toggleGeminiKeyBtn').addEventListener('click', () => {
+                geminiKeyDrawer.classList.toggle('hidden');
+            });
+
+            document.getElementById('saveGeminiKeyBtn').addEventListener('click', () => {
+                const key = geminiApiKeyInput.value.trim();
+                if (key) {
+                    localStorage.setItem('clipframe_gemini_api_key', key);
+                    geminiKeyStatusBadge.textContent = 'Gemini Vision Active';
+                    geminiKeyStatusBadge.className = 'text-[10px] font-mono text-emerald-400';
+                    showToast('Saved Gemini Vision API key');
+                } else {
+                    localStorage.removeItem('clipframe_gemini_api_key');
+                    geminiKeyStatusBadge.textContent = 'Offline OCR Mode';
+                    geminiKeyStatusBadge.className = 'text-[10px] font-mono text-zinc-400';
+                    showToast('Using offline OCR mode', 'info');
+                }
+            });
+
+            function buildSocialPostCaption(hookText) {
+                if (!state.parsedBrief) return hookText || '';
+                const parts = [];
+                if (hookText && hookText.trim()) parts.push(hookText.trim());
+                if (state.parsedBrief.mandatoryCta) parts.push(state.parsedBrief.mandatoryCta.trim());
+                if (state.parsedBrief.hashtags && state.parsedBrief.hashtags.length > 0) {
+                    const missingTags = state.parsedBrief.hashtags.filter(
+                        (tag) => !parts.join(' ').toLowerCase().includes(tag.toLowerCase())
+                    );
+                    if (missingTags.length > 0) parts.push(missingTags.join(' '));
+                }
+                return parts.join('\n\n');
+            }
+
+            function generateReactionaryHook(sceneText) {
+                const clean = sceneText.replace(/^[\-\*\•\d\.\)]+\s*/, '').replace(/\.$/, '').trim();
+                if (!clean) return 'Wait until you see this moment';
+                return `${clean} — yeah, we're locked in`;
+            }
+
+            function parseCampaignBriefText(rawText) {
+                const text = (rawText || '').trim();
+                const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+                const scenes = [];
+                let inClipSection = false;
+
+                for (const line of lines) {
+                    if (/^clip\s+the\s+following\s*:?/i.test(line) || /^what\s+to\s+clip\s*:?/i.test(line)) {
+                        inClipSection = true;
+                        continue;
+                    }
+                    if (inClipSection) {
+                        if (/^(accepted\s+niches|every\s+caption|low\s+quality|no\s+negative|rate\s+per|accepted\s+platforms|max\s+submissions|deadline|rules|requirements)\b/i.test(line)) {
+                            inClipSection = false;
+                            continue;
+                        }
+                        const cleanedScene = line.replace(/^[\-\*\•\d\.\)]+\s*/, '').trim();
+                        if (cleanedScene.length > 3) scenes.push(cleanedScene);
+                    }
+                }
+
+                let mandatoryCta = '';
+                const ctaMatch = text.match(/every\s+caption\s+must\s+include\s+(?:this\s+call\s+to\s+action\s*:?\s*)?([\s\S]*?)(?=\n\s*\n|low\s+quality|no\s+negative|rate\s+per|$)/i);
+                if (ctaMatch && ctaMatch[1]) {
+                    mandatoryCta = ctaMatch[1].replace(/every\s+caption\s+must\s+also\s+include\s*/gi, ' ').replace(/\s+/g, ' ').trim();
+                }
+                const hashtags = Array.from(new Set(text.match(/#[A-Za-z0-9_]+/g) || []));
+                const wantsShortCut = /cut\s+them\s+down|best\s+moment|short|punchy|fast/i.test(text);
+                const wantsRepackage = /repackage|not\s+repost|direct\s+repeat|new\s+header|reactionary/i.test(text);
+
+                return {
+                    scenes,
+                    hooks: scenes.map(generateReactionaryHook),
+                    mandatoryCta,
+                    hashtags,
+                    clipLengthSec: wantsShortCut ? 18 : 25,
+                    zoomPct: wantsRepackage ? 106 : 100,
+                    wantsShortCut,
+                    wantsRepackage
+                };
+            }
+
+            function displayParsedBrief(parsed) {
+                state.parsedBrief = parsed;
+                parsedBriefSummaryBox.classList.remove('hidden');
+                parsedScenesCountLabel.textContent = parsed.scenes.length > 0
+                    ? `${parsed.scenes.length} Target Scenes Extracted`
+                    : 'Editing Rules & CTA Extracted';
+                parsedEditingRuleLabel.textContent = `${parsed.clipLengthSec}s cuts • ${parsed.zoomPct}% reframe`;
+                campaignMetaBadges.innerHTML = `<span class="bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded">9:16 Ready</span>`;
+
+                parsedScenesPills.innerHTML = '';
+                parsed.scenes.forEach((scene, idx) => {
+                    const pill = document.createElement('span');
+                    pill.className = 'text-[11px] bg-zinc-900 border border-zinc-700/90 text-zinc-200 px-2 py-0.5 rounded-md';
+                    pill.textContent = `${idx + 1}. ${scene}`;
+                    parsedScenesPills.appendChild(pill);
+                });
+
+                if (parsed.mandatoryCta || parsed.hashtags.length > 0) {
+                    parsedCtaPreviewRow.classList.remove('hidden');
+                    parsedCtaPreviewText.textContent = parsed.mandatoryCta || parsed.hashtags.join(' ');
+                } else {
+                    parsedCtaPreviewRow.classList.add('hidden');
+                }
+            }
+
+            function copyTextFallback(text, successMsg) {
+                const temp = document.createElement('textarea');
+                temp.value = text;
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+                showToast(successMsg);
+            }
+
+            document.getElementById('copyMandatoryCtaBtn').addEventListener('click', () => {
+                if (!state.parsedBrief) return;
+                const ctaFull = [state.parsedBrief.mandatoryCta, ...state.parsedBrief.hashtags].filter(Boolean).join(' ');
+                copyTextFallback(ctaFull, 'Copied mandatory CTA & hashtags');
+            });
+
+            document.getElementById('copyActiveSocialPostBtn').addEventListener('click', () => {
+                copyTextFallback(document.getElementById('activeSocialPostTextarea').value, 'Copied post caption');
+            });
+
+            document.getElementById('activeSocialPostTextarea').addEventListener('input', (e) => {
+                if (state.activeReelIndex >= 0 && state.clipQueue[state.activeReelIndex]) {
+                    state.clipQueue[state.activeReelIndex].postCaption = e.target.value;
+                }
+            });
+
+            briefScreenshotInput.addEventListener('change', (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                state.briefImageMimeType = file.type || 'image/png';
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    const dataUrl = ev.target.result;
+                    state.briefImageBase64 = dataUrl.split(',')[1];
+                    briefScreenshotPreviewImg.src = dataUrl;
+                    briefScreenshotPreviewImg.classList.remove('hidden');
+                    briefUploadPlaceholder.classList.add('hidden');
+                    await runBriefScreenshotAnalysis(dataUrl);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            async function runBriefScreenshotAnalysis(imageDataUrl) {
+                const apiKey = (localStorage.getItem('clipframe_gemini_api_key') || '').trim();
+                analyzeBriefBtn.disabled = true;
+                analyzeBriefBtnText.textContent = 'Analyzing Rules...';
+                ocrProgressBox.classList.remove('hidden');
+                ocrProgressBar.style.width = '15%';
+                ocrPercentLabel.textContent = '15%';
+
+                try {
+                    if (apiKey && state.briefImageBase64) {
+                        ocrStatusLabel.textContent = 'Analyzing with Gemini Vision...';
+                        ocrProgressBar.style.width = '55%';
+                        ocrPercentLabel.textContent = '55%';
+
+                        const prompt = `Extract campaign rules from this screenshot and return ONLY valid JSON:
+{
+  "extractedText": "full text",
+  "scenes": ["target moments to clip"],
+  "hooks": ["short reactionary hook for each scene"],
+  "mandatoryCta": "required call to action",
+  "hashtags": ["#Tag"],
+  "clipLengthSec": 18,
+  "zoomPct": 106,
+  "wantsShortCut": true,
+  "wantsRepackage": true
+}`;
+                        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                contents: [{
+                                    parts: [
+                                        { text: prompt },
+                                        { inlineData: { mimeType: state.briefImageMimeType, data: state.briefImageBase64 } }
+                                    ]
+                                }],
+                                generationConfig: { responseMimeType: 'application/json' }
+                            })
+                        });
+                        const data = await resp.json();
+                        const jsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (!jsonText) throw new Error('Empty response');
+                        const parsed = JSON.parse(jsonText);
+                        extractedBriefTextInput.value = parsed.extractedText || '';
+                        displayParsedBrief(parsed);
+                        ocrProgressBar.style.width = '100%';
+                        ocrPercentLabel.textContent = '100%';
+                        showToast(`Extracted ${parsed.scenes.length} target scenes`);
+                    } else if (imageDataUrl && typeof Tesseract !== 'undefined') {
+                        ocrStatusLabel.textContent = 'Running offline OCR on iPad...';
+                        const result = await Tesseract.recognize(imageDataUrl, 'eng', {
+                            logger: (m) => {
+                                if (m.status === 'recognizing text' && typeof m.progress === 'number') {
+                                    const pct = Math.round(m.progress * 100);
+                                    ocrProgressBar.style.width = `${pct}%`;
+                                    ocrPercentLabel.textContent = `${pct}%`;
+                                }
+                            }
+                        });
+                        const ocrText = (result?.data?.text || '').trim();
+                        extractedBriefTextInput.value = ocrText;
+                        displayParsedBrief(parseCampaignBriefText(ocrText));
+                        showToast('OCR complete');
+                    } else {
+                        displayParsedBrief(parseCampaignBriefText(extractedBriefTextInput.value));
+                    }
+                } catch (err) {
+                    displayParsedBrief(parseCampaignBriefText(extractedBriefTextInput.value));
+                    showToast('Review extracted text on the right', 'info');
+                } finally {
+                    analyzeBriefBtn.disabled = false;
+                    analyzeBriefBtnText.textContent = 'Scan & Parse Brief';
+                    setTimeout(() => ocrProgressBox.classList.add('hidden'), 1000);
+                }
+            }
+
+            analyzeBriefBtn.addEventListener('click', () => {
+                if (briefScreenshotPreviewImg.src && !briefScreenshotPreviewImg.classList.contains('hidden')) {
+                    runBriefScreenshotAnalysis(briefScreenshotPreviewImg.src);
+                } else if (extractedBriefTextInput.value.trim()) {
+                    displayParsedBrief(parseCampaignBriefText(extractedBriefTextInput.value));
+                    showToast('Parsed campaign brief');
+                } else {
+                    showToast('Upload a screenshot or paste rules first', 'error');
+                }
+            });
+
+            extractedBriefTextInput.addEventListener('input', () => {
+                if (extractedBriefTextInput.value.trim()) {
+                    displayParsedBrief(parseCampaignBriefText(extractedBriefTextInput.value));
+                }
+            });
+
+            document.getElementById('loadSampleBriefBtn').addEventListener('click', () => {
+                const sampleText = `Campaign rules
+Repackage each clip with a new header and reactionary language. Cut down to the best moment.
+
+Clip the following:
+Opening reaction moment
+Main highlight scene
+Crowd or punchline moment
+
+Every caption must include this call to action: Watch full video on demand. Every caption must also include #ClipFramePartner.`;
+                extractedBriefTextInput.value = sampleText;
+                displayParsedBrief(parseCampaignBriefText(sampleText));
+                showToast('Loaded sample campaign brief');
+            });
+
+            document.getElementById('applyBriefToStudioBtn').addEventListener('click', () => {
+                const rawText = extractedBriefTextInput.value.trim();
+                if (!rawText && !state.parsedBrief) {
+                    showToast('Upload a screenshot or load a brief first', 'error');
+                    return;
+                }
+                const brief = state.parsedBrief || parseCampaignBriefText(rawText);
+                displayParsedBrief(brief);
+
+                if (brief.zoomPct && brief.zoomPct !== 100) {
+                    state.videoZoom = brief.zoomPct;
+                    zoomSlider.value = brief.zoomPct;
+                    document.getElementById('zoomVal').textContent = `${brief.zoomPct}%`;
+                }
+
+                const hooksToUse = brief.hooks && brief.hooks.length > 0 ? brief.hooks : [state.caption];
+                bulkCaptionsInput.value = hooksToUse.join('\n');
+                updateBulkCaptionCounters();
+
+                const count = hooksToUse.length;
+                const dur = state.videoDuration || (count * brief.clipLengthSec);
+                const sliceLen = Math.min(brief.clipLengthSec, dur / Math.max(1, count));
+                const step = dur / Math.max(1, count);
+
+                state.clipQueue = hooksToUse.map((hook, idx) => {
+                    const start = Number((idx * step).toFixed(2));
+                    const end = Number(Math.min(dur, start + Math.max(4, sliceLen)).toFixed(2));
+                    return {
+                        startTime: start,
+                        endTime: end,
+                        caption: hook,
+                        postCaption: buildSocialPostCaption(hook),
+                        theme: state.theme,
+                        status: 'Ready'
+                    };
+                });
+
+                selectReelFromQueue(0);
+                showToast(`Applied campaign rules & generated ${count} Reels`);
+            });
+
+            window.addEventListener('load', () => {
+                syncTimelineUI();
+                previewLoop();
+            });
+        })();
+    </script>
+</body>
+</html>
